@@ -1,0 +1,90 @@
+{% extends "admin/base.html" %}
+{% load i18n admin_static bootstrapped_goodies_tags %}
+{% load url from future %} 
+
+{% block extrahead %} 
+{{ block.super }}
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.0/select2.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.0/select2-bootstrap.min.css">
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.0/select2.min.js"></script>
+<script type="text/javascript" src="{% static 'replace_django_inputs_with_typeahead.js' %}"></script>
+
+<style type="text/css">
+
+/* remove the annoyingly big "Fields in bold are required." in every django page. */
+form.form-horizontal>div.alert.alert-warning {
+	display: none;
+}
+
+/* remove the page breadcrums everywhere in the admin */
+body>.container>.row>.col-sm-12>.breadcrumb {
+}
+
+body {
+	letter-spacing: .03em;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
+}
+/* styled selects have the annoying habit of usign 100% of the screen width */
+.select-inline {
+	width: auto;
+	display: inline;
+}
+
+/* in /admin/backend1/venueadmin/ detail, the map should have this dimensions */
+.geocomplete-map {
+	margin: 10px 0 10px 130px;
+	width: 696px;
+	height: 300px;
+}
+
+/* styles for the the searchable combobox/autocomplete widget */
+.custom-combobox {
+	position: relative;
+	display: inline-block;
+}
+
+.custom-combobox-toggle {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	margin-left: -1px;
+	padding: 0;
+}
+
+.custom-combobox-input {
+	margin: 0;
+	padding: 1px 1px;
+	width: 250px;
+}
+
+.custom-combobox-toggle {
+	right: 0px;
+}
+
+/* fix annoying habit of ignoring the nowrap attirbute */
+td.nowrap,th.nowrap {
+	white-space: pre;
+}
+</style>
+<script>
+/* hide the "save and add another" button everywhere, whithout needing to hack the templates/templatetags */
+$(function() {
+    $("input[name='_addanother']").css('display', 'none');
+});
+</script>
+<link href="{% static " img/icons/favicon.ico" %}" rel="icon">
+<link href="{% static " img/icons/icons/57.png" %}" rel="apple-touch-icon" sizes="57x57">
+<link href="{% static " img/icons/icons/72.png" %}" rel="apple-touch-icon" sizes="72x72">
+<link href="{% static " img/icons/icons/76.png" %}" rel="apple-touch-icon" sizes="76x76">
+<link href="{% static " img/icons/icons/114.png" %}" rel="apple-touch-icon" sizes="114x114">
+<link href="{% static " img/icons/icons/120.png" %}" rel="apple-touch-icon" sizes="120x120">
+<link href="{% static " img/icons/icons/144.png" %}" rel="apple-touch-icon" sizes="144x144">
+<link href="{% static " img/icons/icons/152.png" %}" rel="apple-touch-icon" sizes="152x152">
+
+{% endblock %}
+{% block title %}TO-DO App administration{% endblock %}
+{% block branding %}
+<a class="navbar-brand" href="{% url 'admin:index' %}">TO-DO App administration</a>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% if BASIC_WWW_AUTHENTICATION %}User-agent: *
+Disallow: /
+Disallow: /admin/
+{% else %}User-agent: *
+Disallow: /admin/
+{% endif %}

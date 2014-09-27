@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo "-----> Compressing static files"
+python manage.py compress
+
+echo

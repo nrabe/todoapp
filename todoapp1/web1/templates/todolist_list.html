@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load i18n static compress %}
+
+{% block head %}
+<style type="text/css">
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-6 col-md-offset-3">
+        <div class="well">
+            <form role="form" class="form-inline" method="post">
+                <div class="form-group">
+                    <label class="sr-only" for="email">Title</label>
+                    <input type="text" class="form-control" id="create_todolist_title" name="create_todolist_title" placeholder="Enter the new list title" required>
+                </div>
+                <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-plus-sign"></span> Create new list</button>
+                {% csrf_token %}
+            </form>
+        </div>
+</div>
+
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+        dsasda
+        <ul class="list-group">
+            {% for list in todolists %}
+            <li class="list-group-item">
+                <span class="badge">
+                {% if request.session.curr_profile.email == list.created_by.email %}
+                <span class="glyphicon glyphicon-user"></span> me 
+                {% else %} 
+                <span class="glyphicon glyphicon-user"></span> 
+                {{list.created_by.email}} 
+                {% endif %}
+            </span> <a href="?list_id={{list.id}}"><span class="glyphicon glyphicon-th-list"></span> {{list.title}}</a>
+            
+            <hr/>
+            <ul>
+              <li><label><input type="checkbox"/> aasd sdaads adsdsa</label></li>
+              <li><label><input type="checkbox"/> aasd sdaads adsdsa</label></li>
+              <li><label><input type="checkbox"/> aasd sdaads adsdsa</label></li>
+            </ul>
+            
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,22 @@
+Django==1.7
+gunicorn
+wsgiref
+psycopg2
+pylibmc
+newrelic
+dj-database-url
+django-admin-bootstrapped
+django-extensions
+django-heroku-memcacheify
+django-heroku-postgresify
+django-log-request-id
+django-pq # simple task queue, postgresql based
+django-pylibmc-sasl
+sqlparse
+dj-static
+django_compressor
+django-markdown
+futures # python 3.0 backwards compatibility tools
+bunch # alternate-syntax for dicts: dict.key = value
+ordereddict # python 3.0 ordered dict implementation
+requests # full featured http requests

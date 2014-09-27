@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n static compress %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-6 col-md-offset-3">
+        <div class="well">
+            <form role="form" method="post">
+                <div class="form-group">
+                    <label class="sr-only" for="email">Enter your email address</label> <input type="email" class="form-control" id="email" placeholder="Enter your email address" autofocus required>
+                </div>
+                <div class="form-group">
+                    <label class="sr-only" for="password">Choose a Password</label> <input type="password" class="form-control" id="password" placeholder="Choose a Password" required>
+                </div>
+                <div class="form-group">
+                    <label class="sr-only" for="first_name">First name</label> <input type="text" class="form-control" id="first_name" placeholder="First name" required>
+                </div>
+                <div class="form-group">
+                    <label class="sr-only" for="last_name">Last name (optional)</label> <input type="text" class="form-control" id="last_name" placeholder="Last name (optional)">
+                </div>
+                {% csrf_token %}
+                <button type="submit" class="btn btn-default">Register</button>
+                {% csrf_token %}
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
