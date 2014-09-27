@@ -5,4 +5,4 @@ cd $DIR
 
 source venv/bin/activate
 
-PORT=8500 foreman start -c web=2
+PORT=8600 foreman start -c web=2

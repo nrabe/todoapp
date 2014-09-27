@@ -5,5 +5,5 @@ cd $DIR
 
 source venv/bin/activate
 
-python -u manage.py collectstatic --noinput
-python -u manage.py runserver 8600
+python -W ignore::DeprecationWarning -u manage.py collectstatic --noinput
+python -W ignore::DeprecationWarning -u manage.py runserver 8600

@@ -7,22 +7,6 @@ A 4 part project (in principle each backend1 + APP can be hosted independently )
     mobile (webapp)
     admin
 
-
-USEFUL LINKS ( you must sign in to heroku for most of them to work )
-
-    Website public interface
-    http://dev-todoapp1.herokuapp.com/
-    
-    New Relic monitoring tool
-    https://addons-sso.heroku.com/apps/dev-todoapp1/addons/newrelic:stark
-    
-    Papertrail logging storage
-    https://addons-sso.heroku.com/apps/dev-todoapp1/addons/papertrail:choklad
-    
-    Node4j /  GrapheneDB interface
-    https://addons-sso.heroku.com/apps/dev-todoapp1/addons/graphenedb:chalk
-
-
 NICE/NOTABLE FEATURES:
 
 - Mostly Django std features, with (relatively) few 3rd party libraries, so no new languages, protocols, documentation, and standards to follow.
@@ -93,7 +77,7 @@ Examples:
     curl -H Accept:application/json -H Content-Type:application/json -H X-CLIENT-VERSION:TEST.0.0.1 -H Cookie:sessionid=pnf77kqilqjm3q8y68vpauso4u48h37x -X POST -d '[{"jsonrpc": "2.0", "method": "api_sys_test", "params": {"test": "ok"}, "id": 0}]' "http://${APISERVER}/api/0.1/jsonrpc/console.test/"
     curl -H Accept:application/json -H Content-Type:application/json -H X-CLIENT-VERSION:TEST.0.0.1 -H Cookie:sessionid=pnf77kqilqjm3q8y68vpauso4u48h37x -X POST -d '[{"jsonrpc": "2.0", "method": "api_sys_test", "params": {"test": "ok"}, "id": 0}, {"jsonrpc": "2.0", "method": "api_sys_test", "params": {"test": "error"}, "id": 1}]' "http://${APISERVER}/api/0.1/jsonrpc/console.test/"
 
-    HTTP POST/GET (internal usage only)
+    # HTTP POST/GET (internal usage only)
     curl -H Accept:application/json  -H X-CLIENT-VERSION:TEST.0.0.1 -H Cookie:sessionid=pnf77kqilqjm3q8y68vpauso4u48h37x -X POST -d 'venue_id=75edbcda7ff44c01abc534f708ae3c6a' https://api.table-4.me/api/0.1/api_sys_test/
     curl -H Accept:application/json -H X-CLIENT-VERSION:TEST.0.0.1 -X GET "https://api.table-4.me/api/0.1/api_sys_test/?venue_id=75edbcda7ff44c01abc534f708ae3c6a"
 
@@ -102,6 +86,13 @@ RECOMMENDED ADDITIONS
 
     throttling/limiting requests (to avoid DOS attacks)
     https://github.com/sobotklp/django-throttle-requests
+
+
+ADDING A NEW APP/VERSION ( a section of the project, such as admin1, admin2, web1, mobile1 )
+    
+    - create a directory next to the others
+    - add todoapp1.DIRECTORY to settings.INSTALLED_APPS
+    - add the DIRECTORY/urls.py to the urls.py file
 
 
 USEFUL SCRIPTS AND COMMANDS
@@ -139,30 +130,6 @@ CLONING FROM GITHUB (assumes the database is already set up)
     python manage.py migrate
     python manage.py check
     scripts/run-locally.sh
-
-
-STARTING FROM SCRATCH
-	
-	mkdir todoapp1
-	cd todoapp1
-	virtualenv --distribute --no-site-packages venv
-	source venv/bin/activate
-	pip install https://www.djangoproject.com/download/1.7c1/tarball/
-	LIBMEMCACHED=/opt/local pip install bunch ordereddict django-heroku-memcacheify django-heroku-postgresify gunicorn psycopg2 pylibmc futures requests
-
-	django-admin.py startproject todoapp1
-	(moved the contents of todoapp1/* to the parent dir) 
-	django-admin.py startapp backend1
-	django-admin.py startapp mobile1
-	django-admin.py startapp web1
-
-	sudo su postgres -c 'psql'
-	CREATE USER xxxxx PASSWORD 'xxxxx' CREATEDB;
-	psql92 -U xxxxx template1 -c 'CREATE DATABASE xxxxx;'
-
-
-TO ADD A NEW APP/VERSION ( a section of the project, such as admin1, admin2, web1, mobile1 )
     
-    - create a directory next to the others
-    - add todoapp1.DIRECTORY to settings.INSTALLED_APPS
-    - add the DIRECTORY/urls.py to the urls.py file
+    git remote add heroku git@heroku.com:dev-todoapp1.git # needed for deployment
+    git remote add production git@heroku.com:todoapp1.git # needed for deployment

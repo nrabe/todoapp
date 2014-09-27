@@ -207,7 +207,7 @@ def api_call(func):
             if last_exception:
                 logging.error('[ERR % 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() exception=%.1024r\n', *logging_params)
             elif settings.USE_API_LOGGING:
-                logging.info('[API % 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s()\n\tresponse=%.1024r\n', *logging_params)
+                logging.info('[API % 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() response=%.1024r\n', *logging_params)
 
     return decorated
 

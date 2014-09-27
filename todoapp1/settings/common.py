@@ -7,7 +7,8 @@ https://docs.djangoproject.com/en/dev/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/dev/ref/settings/
 """
-
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import sys
@@ -46,8 +47,8 @@ BASIC_WWW_AUTHENTICATION = False
 ALLOWED_HOSTS = []
 
 # code to get Heroku Sendgrid integration
-SENDGRID_USERNAME = os.environ.get('SENDGRID_USERNAME') or 'daemoniclabs'
-SENDGRID_PASSWORD = os.environ.get('SENDGRID_PASSWORD') or 'daemonic2009'
+SENDGRID_USERNAME = os.environ.get('SENDGRID_USERNAME')
+SENDGRID_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
 
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = SENDGRID_USERNAME

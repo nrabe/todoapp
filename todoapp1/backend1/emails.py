@@ -23,10 +23,6 @@ def send_multipart_email_task(
                               context=None,
                               cc=None,
                               ):
-    """
-    sends an html/text multipart email
-    """
-    # subject, from_email, to = 'hello', 'from@example.com', 'to@example.com'
     context = context or {}
     context.update({'WEBSITE_URL': settings.WEBSITE_URL, 'SITE_TITLE': settings.SITE_TITLE, })
     context = Context(context)
@@ -41,19 +37,13 @@ def send_multipart_email_task(
     msg = EmailMultiAlternatives(subject_content, text_content, from_email, to_email)
     msg.attach_alternative(html_content, "text/html")
 
-    # NOTE: in local/dev environments (any DEBUG=True) skip sending ANY email that's outside the company
-    if settings.DEBUG and not (to_email[0].endswith('@table8.com') or to_email[0].endswith('@daemoniclabs.com')):
-        logging.debug('SKIP.send_multipart_email_task (non-company email) %r %r' % (subject_content, to_email))
-        return True  # always return a positive value
-
     # NOTE: Skip certain emails. It makes unit testing way faster.
-    if settings.SKIP_EMAILS or (not os.environ.get('SEND_UNITTEST_EMAILS') and to_email[0].startswith('nahuel+test')):
+    if settings.SKIP_EMAILS:
         logging.debug('SKIP.send_multipart_email_task %r %r' % (subject_content, to_email))
-        return True  # always return a positive value
+        return
 
     logging.debug('SEND.send_multipart_email_task %r %r' % (subject_content, to_email))
     msg.send()
-    return True  # always return a positive value
 
 
 def send_multipart_email(*args, **kwargs):
