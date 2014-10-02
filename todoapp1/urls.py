@@ -8,8 +8,10 @@ urlpatterns = patterns('',
     url(r'^api/', include('todoapp1.backend1.urls', 'api')),
     url(r'^', include('todoapp1.web1.urls')),
 )
-from todoapp1.admin1.urls import urlpatterns as admin_urlpatterns
-urlpatterns += admin_urlpatterns
+# from todoapp1.admin1.urls import urlpatterns as admin_urlpatterns
+urlpatterns += patterns('',
+    url(r'^admin/', include('todoapp1.admin1.urls', app_name='admin')),
+)
 
 # In debug mode (DEV, LOCAL), process and log 404 and 500 errors (with DEBUG=False 404's will be ignored and 500's will be sent by email)
 if settings.DEBUG:

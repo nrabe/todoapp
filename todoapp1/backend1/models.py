@@ -11,16 +11,31 @@ from api_utils import ApiException
 from error_messages import ERRORS
 
 
+from django.db.backends.signals import connection_created
+from django.dispatch import receiver
+
+
+@receiver(connection_created)
+def extend_sqlite(connection=None, **kwargs):
+    if connection.vendor == "sqlite":
+        def pg_concat(*args):
+            return ''.join(args)
+        connection.connection.create_function("concat", -1, pg_concat)
+
+
 class BaseModel(models.Model):
     class Meta:
         abstract = True
-    rname = models.CharField(max_length=255, null=False, blank=False, default='(no rname)', help_text='Internal object name (fit for admin/backend tasks only)')
+    rname = models.CharField(max_length=255, null=False, blank=False, default='(no rname)', help_text='Internal object name (fit for admin/backend tasks only, must be unique)', unique=True)
     date_created = CreationDateTimeField()
     date_updated = ModificationDateTimeField()
 
     def save(self, *args, **kwargs):
-        self.rname = self.rname or getattr(self, 'title', None) or getattr(self, 'email', None) or self.id or '(no rname)'
+        self.rname = self.rname or self.id or None
         super(BaseModel, self).save(*args, **kwargs)
+        if not self.rname:
+            self.rname = unicode(self.id)
+            self.save()
 
     def __unicode__(self):
         return self.rname or '(no rname)'
@@ -30,6 +45,10 @@ class UserProfile(DjangoUser):
     """ Since Django User inheritance is not the best way to go (and uneeded in this case), simply create a proxy """
     class Meta:
         proxy = True
+
+    @property
+    def rname(self):
+        return '%s %s %s' % (self.first_name, self.last_name, self.email)
 
     def serialize(self):
         """ expose object via the API """
@@ -232,4 +251,3 @@ class HandsontableDemo(BaseModel):
     test_datetime_null = models.DateTimeField(null=True, blank=True)
     test_date = models.DateField(null=True, blank=True)
     test_time = models.TimeField(null=True, blank=True)
-

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-from django.contrib import admin
+import logging
 
-from todoapp1.backend1.models import UserProfile, TODOList, TODOListItem, TODOListSharing, HandsontableDemo
+from django.contrib import admin
+from django.conf.urls import url
+
+from todoapp1.backend1 import models
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -20,8 +23,21 @@ class TODOListSharingAdmin(BaseAdmin):
     raw_id_fields = ('todolist', 'shared_by', 'shared_with')
 
 
-admin.site.register(UserProfile)
-admin.site.register(TODOList, TODOListAdmin)
-admin.site.register(TODOListItem, TODOListItemAdmin)
-admin.site.register(TODOListSharing, TODOListSharingAdmin)
-admin.site.register(HandsontableDemo)
+class HandsontableDemoAdmin(BaseAdmin):
+    raw_id_fields = ('test_foreign_key', 'test_foreign_key_null')
+
+    def get_urls(self):
+        """ override the list view with the grid, and adds save and autocomplete urls """
+        urls = super(HandsontableDemoAdmin, self).get_urls()
+        my_urls = [
+            url(r'^autocomplete/(?P<fieldname>.+)/$', 'todoapp1.admin1.views.generic_userprofile_autocomplete', name='backend1_handsontabledemo_autocomplete'),
+            url(r'^$', 'todoapp1.admin1.views.handsontable_demo', name='backend1_handsontabledemo_changelist'),
+        ]
+        return my_urls + urls
+
+
+admin.site.register(models.UserProfile)
+admin.site.register(models.TODOList, TODOListAdmin)
+admin.site.register(models.TODOListItem, TODOListItemAdmin)
+admin.site.register(models.TODOListSharing, TODOListSharingAdmin)
+admin.site.register(models.HandsontableDemo, HandsontableDemoAdmin)

@@ -50,11 +50,10 @@ body {
     Hotgrid.TEMP_ID_PREFIX = Hotgrid.SPECIAL_PREFIX+'_Id__';
     Hotgrid.MAX_ROWS = {{MAX_ROWS}};
     Hotgrid.handsontable_instance = null;
-    Hotgrid.url_autocomplete = '/admin/backend1/userprofileadmin/hotgrid_autocomplete/DUmMY1/';
-    Hotgrid.url_load_save = window.location.pathname;
+    Hotgrid.url_load_save = window.location.pathname; // the save action  is simply POSTing to the same url
     Hotgrid.table_columns = {{table_columns|safe}};
     Hotgrid.table_column_no_by_name_idx = {}; // index to quickly lookup column index by property name
-    Hotgrid.table_columns_autocomplete_idx = {} // map of columns to lookup ( foreign keys )
+    Hotgrid.table_columns_foreignkey_idx = {} // map of columns to lookup ( foreign keys )
     Hotgrid.table_columns_lookup_idx = {} // map of columns to lookup ( fields with "choices" )
     Hotgrid.table_data = [];
     Hotgrid.table_headers = [];
@@ -143,10 +142,17 @@ body {
         }
         if(flag_remove) {
             // DELETE
-            rec['_hOt_flag_delete_record__'] = true;
+            rec[Hotgrid.SPECIAL_PREFIX+'_flag_delete_record__'] = true;
         }else{
             // UPDATE
             rec[field] = val;
+        }
+        var def = null;
+        if(def = Hotgrid.table_columns_foreignkey_idx[field]) {
+            rec[def.fieldname] = def.lookup_choices_text_idx[val]||null;
+        }
+        if(def = Hotgrid.table_columns_lookup_idx[field]) {
+            rec[def.fieldname] = def.lookup_choices_text_idx[val]||null;
         }
         rec[Hotgrid.SPECIAL_PREFIX+'rowno'] = rowno; // save the grid position, so errors sent from the server can be rendered.
         // UI feedback, coloring the changed rows and displaying messages to the user
@@ -162,28 +168,13 @@ body {
             Hotgrid.list_of_unsaved_changes = [];
             Hotgrid.list_of_unsaved_changes_idx = {};
         }
-        
-        // process choice fields, switching from value to label
-        var temp_changes = [];
-        $.each(Hotgrid.list_of_unsaved_changes, function (rowno, row) {
-            var server_row = $.extend({}, row);
-            temp_changes.push(server_row);
-            $.each(row, function (fieldname, value) {
-                var coldef = Hotgrid.table_columns_lookup_idx[fieldname];
-                if(coldef) {
-                    if(value in coldef.lookup_choices_label_idx) {
-                        server_row[fieldname] = coldef.lookup_choices_label_idx[value]||null;
-                    }
-                }
-            });
-        });
-        
+        console.log('HOT-Grid request... request=', Hotgrid.list_of_unsaved_changes);
         $.ajax({
             url: Hotgrid.url_load_save,
             dataType: 'json',
             type: 'POST',
             data: {
-                changes: JSON.stringify(temp_changes)
+                changes: JSON.stringify(Hotgrid.list_of_unsaved_changes)
             },
             success: function(response) {
                 console.log('HOT-Grid response... response=', response);
@@ -203,18 +194,8 @@ body {
                     Hotgrid.handsontable_instance.validateCells(function() { Hotgrid.handsontable_instance.render(); });
                 }else{
                     Hotgrid.table_data = response.table_data;
-                    // process choice fields switching from label to value
-                    $.each(Hotgrid.table_data, function (rowno, row) {
-                        var colno = 0;
-                        $.each(row, function (fieldname, value) {
-                            var coldef = Hotgrid.table_columns_lookup_idx[fieldname];
-                            if(coldef) {
-                                row[fieldname] = coldef.lookup_choices[value]||null;
-                            }
-                        });
-                    });
                     Hotgrid.handsontable_instance.loadData(Hotgrid.table_data);
-                    // cleanup the previous changes
+                    // discard the already saved changes
                     Hotgrid.list_of_unsaved_changes = [];
                     Hotgrid.list_of_unsaved_changes_idx = {};
                     // UI
@@ -234,7 +215,7 @@ body {
         $('#footer_buttons_while_browsing').css('display', 'none');
         $('#footer_buttons_while_editing').css('display', 'inline');
         Hotgrid.flag_is_readonly = false;
-        $('#handsontable_main').handsontable('getInstance').updateSettings({readOnly: Hotgrid.flag_is_readonly });
+        $('#handsontable_main').handsontable('getInstance').updateSettings({readOnly: Hotgrid.flag_is_readonly, minSpareRows: 1 });
         $('#change_counter').html('');
         $('#list_notification').html('<b>Change the contents of the spreadsheet and press Save to store the changes</b>');
     }
@@ -242,9 +223,19 @@ body {
         $('#footer_buttons_while_browsing').css('display', 'inline');
         $('#footer_buttons_while_editing').css('display', 'none');
         Hotgrid.flag_is_readonly = true;
-        $('#handsontable_main').handsontable('getInstance').updateSettings({readOnly: Hotgrid.flag_is_readonly });
+        $('#handsontable_main').handsontable('getInstance').updateSettings({readOnly: Hotgrid.flag_is_readonly, minSpareRows: 0 });
         $('#change_counter').html('Double-click the spreadsheet or press:');
     }
+    // show a link when in read-only mode, and just a plain text when editing
+    var detaillink_Renderer = function (instance, td, row, col, prop, value, cellProperties) {
+        if(Hotgrid.flag_is_readonly) {
+            var url = cellProperties.detail_url.replace('%28id%29', value);
+            td.innerHTML = '<a href="'+url+'" class="btn btn-primary btn-xs" style="width: 100%;" title="Detail view">'+Handsontable.helper.stringify(value)+'</a>';
+            return td;
+        }else{
+            Handsontable.renderers.TextRenderer.apply(this, arguments);
+        }
+    };
     
     $(function() {
         // Enable/disable editing
@@ -269,67 +260,75 @@ body {
             editing_disable();
             load_save();
         });
-        var myAutocompleteRenderer = function(instance, td, row, col, prop, value, cellProperties) {
-          Handsontable.AutocompleteCell.renderer.apply(this, arguments);
-          td.style.fontStyle = 'italic';
-          td.title = 'Type to show the list of options';
-        };
-        
-        Handsontable.cellTypes['foreignkey'] = Handsontable.AutocompleteCell;
+
+        // index to quickly lookup records  by pk
+        $.each(Hotgrid.table_data, function(rowno, item) {
+            item._hg_rowno = rowno;
+            Hotgrid.table_data_pk_idx[item.pk] = item;
+        });
 
         // process each column, adding callbacks and validators
         var table_columns_lookup_idx = {};
         $.each(Hotgrid.table_columns, function(idx, def) {
             def.validator = function(value, callback) {
-                console.log('validator(', this.data, this.djangoBlank, ')', [value], this);
-                if (value || this.djangoBlank) {
+                if (value || this.djangoBlank || this.readOnly) {
                     callback(true);
                 } else {
                     callback(false);
                 }
             };
-            // foreign key fields. When saving, the KEY will be sent, not the LABEL
+            // foreignkey field special setup.
             if (def.type == 'foreignkey') {
-                Hotgrid.table_columns_autocomplete_idx[def.data] = def;
-                def.renderer = myAutocompleteRenderer;
-                def.editor = Handsontable.AutocompleteEditor;
+                def.type = 'autocomplete';
+                Hotgrid.table_columns_foreignkey_idx[def.data] = def;
+                def.lookup_choices = {};
+                def.lookup_choices_text_idx = {};
                 def.strict = true;
                 def.allowInvalid = false;
+                def.source = function (query, process) {
+                    $.ajax({
+                        url: def.lookup_remote_url,
+                        dataType: 'json',
+                        data: {
+                            query: query
+                        },
+                        success: function (response) {
+                            console.log("response", response);
+                            var temp = [];
+                            $.each(response.items, function (dummy, o) {
+                                temp.push(o.text);
+                                def.lookup_choices[o.id] = o.text;
+                                def.lookup_choices_text_idx[o.text] = o.id;
+                            });
+                            process(temp);
+                        }
+                    });
+                };
             }
-            // choices field. When saving, the KEY will be sent, not the LABEL
+            // any field with "choices"".
             if (def.type == 'lookup') {
                 def.type = 'dropdown';
                 Hotgrid.table_columns_lookup_idx[def.data] = def;
                 def.strict = true;
                 def.allowInvalid = false;
                 def.source = [];
-                def.lookup_choices_label_idx = {};
+                def.lookup_choices_text_idx = {};
                 if (def.djangoBlank||def.djangoNull) {
                     def.lookup_choices[''] = '';
                 }
-                $.each(def.lookup_choices, function (key, label) {
-                    def.source.push(label);
-                    def.lookup_choices_label_idx[label] = key;
+                $.each(def.lookup_choices, function (key, text) {
+                    def.source.push(text);
+                    def.lookup_choices_text_idx[text] = key;
                 });
-                /*
-                def.validator = function(value, callback) {
-                    if (value in def.lookup_choices_label_idx) {
-                        callback(true);
-                    } else {
-                        callback(false);
-                    }
-                };
-                */
             }
-            Hotgrid.table_column_no_by_name_idx[def.data] = idx;
-            Hotgrid.table_headers.push(def.verbose_name||def.data);
+            console.log(def)
+            console.log(def.renderer)
+            if (def.renderer == 'detaillink_Renderer') {
+                def.renderer = detaillink_Renderer;
+            }
             
-        });
-
-        // index to quickly lookup records  by pk
-        $.each(Hotgrid.table_data, function(rowno, item) {
-            item._hg_rowno = rowno;
-            Hotgrid.table_data_pk_idx[item.pk] = item;
+            Hotgrid.table_column_no_by_name_idx[def.data] = idx;
+            Hotgrid.table_headers.push(def.label||def.data);
         });
 
         var timeout_save_changes = null;
@@ -340,7 +339,7 @@ body {
             data : Hotgrid.table_data,
             readOnly: true,
             fixedRowsTop: 0,
-            minSpareRows : 1,
+            minSpareRows : 0,
             stretchH: 'none',
             fillHandle : false, 
             c1ontextMenu: {

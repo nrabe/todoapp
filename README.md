@@ -1,50 +1,48 @@
 todoapp1 - sample web/mobile/api project
 ======================================
 
-A 4 part project (in principle each backend1 + APP can be hosted independently ):
-	backend ( api, models, tools, etc )
+A kitchen-sink of useful tools/features/practices for relatively complex django projects:
+	backend ( api, models, periodic processes, tools, etc )
     web
     mobile (webapp)
     admin
 
-NICE/NOTABLE FEATURES:
 
-- Mostly Django std features, with (relatively) few 3rd party libraries, so no new languages, protocols, documentation, and standards to follow.
+USEFUL FETURES/PRACTICES:
 
-- Little magic or implicit behavior... api handlers are views, serializers are simply model methods, parameter validators are manually called functions.
+- very modular project layout, self-explanatory scripts for common tasks.
 
-- flexible "versioning", being able to implement /0.2/signup/ alongside /0.1/signup/ or even a parallel "backend2" directory.
-
-- advanced error handling ( usually the last thing you do, and pretty annoying to plan for ), handling webs, api, periodic processes, etc.
-
-- color-coded and formatted logging.
+- app versioning, api versioning, client versioning... very flexible.
 
 - local/dev/prod stages and settings (even particular settings for different developers or branches).
 
-- client versioning (as part of the url).
+- color-coded and formatted logging.
 
-- scripts for common tasks, mostly self-explanatory.
+- admin (and custom) foreign-key lookups, both manual (defining autocomplete views) and automatic ( converting selects to autocompletes )
 
-- pretty basic unit testing, mostly to catch the worst errors.
+- error handling and notification: web, api, periodic processes, etc.
 
-- unit testing using the actual database, instead of the django way of always creating a test database (requires care when testing! but the actual db and its data is tested this way).
+- pretty basic, but useful, unit testing (mostly to catch the worst errors).
+
+- unit testing using the actual database, instead of the django way of always creating a test database (requires care when testing! but the actual db and its data gets tested this way).
 
 
-HINTS/TIPS/QUESTIONS:
-    
+TIPS FOR PROJECTS:
+
+
+- use few 3rd party packages/modules. 3rd party means new protocols/languages/documentation/maintenance issues... if it can be avoided, it's better.
+
+- Little magic or implicit behavior... pages are views, api handlers are views, serializers are simply model methods, parameter validators are manually called functions.
+
 - Do not use middlewares or context processors... they are "magic", hard to debug, understand and track down... and affect every request, not just the ones you think they should.
-
-- Do not user third party dependencies unless it's unavoidable, and consult the rest of the team for alternatives... Third party libraries may seem cool, but over time they become unmaintained, or even the well maintained ones may fail to build for a few hours, days or weeks... and extra packages means extra documentation, extra know-how, and another source of conflicts and bugs.
-
-- If it's not unit-tested (at least a very basic test), it's not complete. Others in the team do not know how to test the new feature, and you'll forget in a week.
 
 - Use keyword parameters... positional parameters are harder to understand, particularly when you're using somebody else's functions.
 
-- Do not user request.user outside the backend. It's tempting, but the API may change/censor user information.
+- Do not access the DB models (or other non-json-serializable stuff) outside backend1. Creating an API call is easy, and it separates the specific data storage from the rest of the system.
 
-- Do not access the DB models outside backend1. Creating an API call is easy, and just for that purpose, and it separates the specific data storage from the rest of the system.
+- Prefer JSON-RPC over REST: Designing REST APIs naming and relationships is pretty hard, and inefficient when there is no clear idea about where/how it will be used (you end up having 3 or 4 API calls for a particular view... wasteful).
 
-- Why I prefer JSON-RPC and not REST: Designing REST APIs is pretty hard, different than python, and particularly inefficient when there is no clear idea on how it will be used (you end up having 3 or 4 API calls for a particular view... wasteful).
+- If it's not unit-tested (at least a very basic test), it's not complete. Others in the team do not know how to test the new feature, and you'll forget in a week.
 
 
 API FORMATS:
@@ -96,8 +94,7 @@ ADDING A NEW APP/VERSION ( a section of the project, such as admin1, admin2, web
 
 
 USEFUL SCRIPTS AND COMMANDS
-
-    - scripts/test.sh to run all the tests.
+    - scripts/test.sh to run all the unit tests.
     - scripts/run-locally.sh to run a single development server instance
     - scripts/run-foreman.sh to run 2 server instances ( requires foreman and nginx installed )
     - scripts/upload-heroku.sh to upload to the DEVELOPMENT server
@@ -131,5 +128,6 @@ CLONING FROM GITHUB (assumes the database is already set up)
     python manage.py check
     scripts/run-locally.sh
     
+    heroku plugins:install https://github.com/ddollar/heroku-push # needed for remote deployment
     git remote add heroku git@heroku.com:dev-todoapp1.git # needed for deployment
     git remote add production git@heroku.com:todoapp1.git # needed for deployment
