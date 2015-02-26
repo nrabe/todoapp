@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
 
-echo "-----> running collectstatic"
-python manage.py collectstatic --noinput
-echo "-----> running compress"
-python manage.py compress --noinput
 
 echo
