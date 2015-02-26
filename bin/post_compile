@@ -9,11 +9,8 @@ echo "-----> I'm post-compile hook"
 # compile phase. See: https://github.com/heroku/heroku-buildpack-python/issues/57
 export MEMCACHE_SERVERS='' MEMCACHIER_SERVERS=''
 
-#echo "-----> running collectstatic"
-#python manage.py collectstatic -c --noinput
-
-#echo "-----> running compress"
-#python manage.py compress --noinput
+echo "-----> running compress"
+python manage.py compress --noinput
 
 echo "-----> Post-compile done"
 ls -al /app/static
