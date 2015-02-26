@@ -1,5 +1,5 @@
 $(function() {
-    
+/*
     // select2 remote lookup (generic)... all this should be defined as ModelAdmin.raw_id_fields
     $('input#id_created_by, input#id_last_updated_by, input#id_test_foreign_key, input#id_test_foreign_key_null').each(function(idx, elt) {
         $(elt).select2({width: '300', containerCss : {"display":"inline-block"},
@@ -18,6 +18,7 @@ $(function() {
             },
         });
     });
+*/
     // convert comboboxes to select2 elements, no remote lookup.
     $('select#id_todolist').each(function(idx, elt) {
         $(elt).select2({width: '300', containerCss : {"display":"inline-block"}});

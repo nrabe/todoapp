@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>General API &mdash; TodoApp 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="TodoApp 0.2 documentation" href="index.html" />
+    <link rel="prev" title="Index" href="index.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="index.html">
+          <span>TodoApp 0.2 documentation</span></a></h1>
+        <h2 class="heading"><span>General API</span></h2>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="index.html">Index</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="general-api">
+<h1>General API<a class="headerlink" href="#general-api" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li>JSON-RPC 2.0 protocol, with named parameters only <a class="reference external" href="http://www.jsonrpc.org/specification">http://www.jsonrpc.org/specification</a></li>
+<li>ISO 8601 date, time and datetime formats: YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS+HH:MM, and HH:MM:SS</li>
+<li>every parameter is required unless marked as (optional)</li>
+<li>every String parameter and response is up to 255 characters long, unless otherwise specified</li>
+<li>UTF-8 as preferred request/response encoding</li>
+</ul>
+<span class="target" id="module-todoapp1.backend1.api"></span><dl class="function">
+<dt id="todoapp1.backend1.api.api_sys_test">
+<tt class="descname">api_sys_test</tt><big>(</big><em>request</em>, <em>test=''</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_sys_test" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of configuration parameters ( server version, mood types, titles, etc ).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_sys_create_test_data">
+<tt class="descname">api_sys_create_test_data</tt><big>(</big><em>request</em>, <em>also_remove=''</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_sys_create_test_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>removes and creates data for testing purposes, to be deleted by api_sys_remove_test_data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>also_remove</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_sys_remove_test_data">
+<tt class="descname">api_sys_remove_test_data</tt><big>(</big><em>request</em>, <em>also_remove=''</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_sys_remove_test_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>removes the data created by api_sys_create_test_data and other testing processes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>also_remove</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_config">
+<tt class="descname">api_config</tt><big>(</big><em>request</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of configuration parameters ( server version, mood types, titles, etc ).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_todolist">
+<tt class="descname">api_todolist</tt><big>(</big><em>request</em>, <em>todolist_id=None</em>, <em>search=None</em>, <em>category=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_todolist" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns one or more TO-DO Lists. At least one of the parameters is required.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>todolist_id</strong> &#8211; </li>
+<li><strong>search</strong> &#8211; </li>
+<li><strong>category</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><tt class="code highlight json docutils literal"><span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;todolists&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="p"><span class="pre">[{</span></span><span class="nt"><span class="pre">&quot;id&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">},]}</span></span></tt></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ApiException:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">(200, &#8216;Missing or invalid parameter FIELD_NAME VALUE&#8217;)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_todolist_set">
+<tt class="descname">api_todolist_set</tt><big>(</big><em>request</em>, <em>todolist_id=None</em>, <em>title=None</em>, <em>comments=None</em>, <em>category=None</em>, <em>status=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_todolist_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>update or create a TO-DO List</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>todolist_id</strong> &#8211; (optional when creating)</li>
+<li><strong>title</strong> &#8211; (optional when updating)</li>
+<li><strong>comments</strong> &#8211; (optional when updating)</li>
+<li><strong>category</strong> &#8211; (optional when updating)</li>
+<li><strong>status</strong> &#8211; (optional when updating)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><tt class="code highlight json docutils literal"><span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;todolist&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;id&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">}}</span></span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_todolist_item_set">
+<tt class="descname">api_todolist_item_set</tt><big>(</big><em>request</em>, <em>todolist_id=None</em>, <em>todolistitem_id=None</em>, <em>text=None</em>, <em>status=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_todolist_item_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>update or create a TO-DO List Item. Authentication required</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_todolist_share">
+<tt class="descname">api_todolist_share</tt><big>(</big><em>request</em>, <em>todolist_id=None</em>, <em>share_with_email=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_todolist_share" title="Permalink to this definition">¶</a></dt>
+<dd><p>share a TO-DO List. Authentication required</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_signup">
+<tt class="descname">api_signup</tt><big>(</big><em>request</em>, <em>email=None</em>, <em>password=None</em>, <em>first_name=None</em>, <em>last_name=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_signup" title="Permalink to this definition">¶</a></dt>
+<dd><p>registers a new user and authenticates it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>email</strong> &#8211; </li>
+<li><strong>password</strong> &#8211; </li>
+<li><strong>first_name</strong> &#8211; </li>
+<li><strong>last_name</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><tt class="code highlight json docutils literal"><span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;profile&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;id&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">},</span></span> <span class="nt"><span class="pre">&quot;sessionid&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">}</span></span></tt></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ApiException</strong> &#8211; (200, &#8216;Missing or invalid parameter FIELD_NAME VALUE&#8217;)</li>
+<li><strong>ApiException</strong> &#8211; (402, &#8216;Invalid email address or password&#8217;)</li>
+<li><strong>ApiException</strong> &#8211; (403, &#8216;Email address already registered&#8217;)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_signin">
+<tt class="descname">api_signin</tt><big>(</big><em>request</em>, <em>email=None</em>, <em>password=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_signin" title="Permalink to this definition">¶</a></dt>
+<dd><p>authenticates the user</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>email</strong> &#8211; </li>
+<li><strong>password</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><tt class="code highlight json docutils literal"><span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;profile&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;id&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">},</span></span> <span class="nt"><span class="pre">&quot;sessionid&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">}</span></span></tt></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ApiException:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">(200, &#8216;Missing or invalid parameter FIELD_NAME VALUE&#8217;)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_signout">
+<tt class="descname">api_signout</tt><big>(</big><em>request</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_signout" title="Permalink to this definition">¶</a></dt>
+<dd><p>clears the user session</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_profile">
+<tt class="descname">api_profile</tt><big>(</big><em>request</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the current user profile ( just as signin/signup does ). Authentication required.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><tt class="code highlight json docutils literal"><span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;profile&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;id&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">},</span></span> <span class="nt"><span class="pre">&quot;sessionid&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">}</span></span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises ApiException:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">(401, &#8216;Authentication required&#8217;)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api.api_profile_update">
+<tt class="descname">api_profile_update</tt><big>(</big><em>request</em>, <em>email=None</em>, <em>password=None</em>, <em>first_name=None</em>, <em>last_name=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api.api_profile_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>updates and returns the current user profile. Authentication required.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><tt class="code highlight json docutils literal"><span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;profile&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="p"><span class="pre">{</span></span><span class="nt"><span class="pre">&quot;id&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">},</span></span> <span class="nt"><span class="pre">&quot;sessionid&quot;</span></span><span class="p"><span class="pre">:</span></span> <span class="s2"><span class="pre">&quot;&quot;</span></span><span class="p"><span class="pre">}</span></span></tt></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ApiException</strong> &#8211; (401, &#8216;Authentication required&#8217;)</li>
+<li><strong>ApiException</strong> &#8211; (200, &#8216;Missing or invalid parameter FIELD_NAME VALUE&#8217;)</li>
+<li><strong>ApiException</strong> &#8211; (402, &#8216;Invalid email address or password&#8217;)</li>
+<li><strong>ApiException</strong> &#8211; (403, &#8216;Email address already registered&#8217;)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="index.html">Index</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2014, Nahuel, Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

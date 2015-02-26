@@ -1,30 +1,38 @@
 todoapp1 - sample web/mobile/api project
 ======================================
 
-A kitchen-sink of useful tools/features/practices for relatively complex django projects:
+A kitchen-sink project, with lots of useful tools/features/practices for relatively complex django project involving
+
 	backend ( api, models, periodic processes, tools, etc )
     web
     mobile (webapp)
     admin
 
 
-USEFUL FETURES/PRACTICES:
+USEFUL FETURES / PRACTICES:
 
-- very modular project layout, self-explanatory scripts for common tasks.
+- very modular project layout, fit for a team, self-explanatory scripts for common tasks.
 
-- app versioning, api versioning, client versioning... very flexible.
+- app versioning, api versioning, client versioning... very flexible to adapt to a lot of early project stages.
 
 - local/dev/prod stages and settings (even particular settings for different developers or branches).
 
 - color-coded and formatted logging.
 
-- admin (and custom) foreign-key lookups, both manual (defining autocomplete views) and automatic ( converting selects to autocompletes )
+- admin (and custom) foreign-key lookups, plus automatically transforming selects to autocompletes (using jquery-select2 http://ivaynberg.github.io/select2/ )
 
-- error handling and notification: web, api, periodic processes, etc.
+- handsontable spreadsheet-like interface to models, supporting: foreign-keys, choice fields, lookup, datetime/date/time fields, cut and paste. An awesome experiment (*)
+
+- error handling, logging and notification: web, api, periodic processes, etc.
 
 - pretty basic, but useful, unit testing (mostly to catch the worst errors).
 
 - unit testing using the actual database, instead of the django way of always creating a test database (requires care when testing! but the actual db and its data gets tested this way).
+
+
+(*) Handsontable vs Django Admin:
+django admin is good enough sometimes... but it requires too much tweak/coding just to be "good enough", and you usually throw it away for specific CRUD pages after a while.
+Handsontable is nicer for many projects: a familiar user-interface, easy to tweak, and can be supplemented nicely with just a "details" form handling the complex fields ( html fields, images, location maps, etc). Horizontal scrolling is a small price to pay.
 
 
 TIPS FOR PROJECTS:

@@ -8,7 +8,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/dev/ref/settings/
 """
 import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning) 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import sys
@@ -44,7 +44,7 @@ BASIC_WWW_AUTHENTICATION_PASSWORD = "t8"
 BASIC_WWW_AUTHENTICATION = False
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # code to get Heroku Sendgrid integration
 SENDGRID_USERNAME = os.environ.get('SENDGRID_USERNAME')
@@ -64,6 +64,7 @@ SITE_ID = 1
 INSTALLED_APPS = (
     'todoapp1.web1',
     'todoapp1.backend1',
+    'todoapp1.backend_res1',
     'todoapp1.mobile1',
     'todoapp1.admin1',
     'pq',  # simple task queue ( django-pq )
@@ -91,7 +92,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'todoapp1.web1.middleware.GlobalRequestMiddleware',
+    'todoapp1.middleware.GlobalRequestMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
@@ -106,6 +107,11 @@ STATICFILES_FINDERS = (
 )
 
 STATIC_ROOT = os.path.normpath(os.path.join(BASE_DIR, 'static'))
+
+# to serve the documentation in heroku DEV (and locally)
+STATICFILES_DIRS = (
+    os.path.abspath(os.path.join(BASE_DIR, 'docs/')),
+)
 
 MEDIA_ROOT = os.path.normpath(os.path.join(BASE_DIR, 'media'))
 MEDIA_URL = "/media/"
@@ -166,7 +172,7 @@ GRAPHENEDB_URL = os.environ.get("GRAPHENEDB_URL")
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'US/Pacific'  # this is the timezone for processing, storing dates... DISPLAY_TIME_ZONE should be used to convert it when rendering.
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True

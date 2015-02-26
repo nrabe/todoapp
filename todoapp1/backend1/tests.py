@@ -80,7 +80,7 @@ class SimpleTestCase(TestCase):
         todolists = [x for x in response['todolists'] if x.id == todolist1.id]
         assert len(todolists) == 1 and todolists[0].id == todolist1.id
 
-        response = backend.api_todolist(apicontext1)
+        response = backend.api_todolist(apicontext1, search=todolist1.title)
         todolists = [x for x in response['todolists'] if x.id == todolist1.id]
         assert len(todolists) == 1 and todolists[0].id == todolist1.id
 
@@ -126,7 +126,7 @@ class SimpleTestCase(TestCase):
         todolists = [x for x in response['todolists'] if x.id == todolist1.id]
         assert len(todolists) == 1 and todolists[0].id == todolist1.id
 
-        response = backend.api_todolist(apicontext2)
+        response = backend.api_todolist(apicontext2, search=todolist1.title)
         todolists = [x for x in response['todolists'] if x.id == todolist1.id]
         assert len(todolists) == 1 and todolists[0].id == todolist1.id
 

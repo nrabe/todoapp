@@ -1,4 +1,144 @@
+/**
+ * cell type: checkbox, without "## Bad Value ##"
+ * cell types: datetime, date, time
+ */
+
 (function(Handsontable) {
+
+    var clonableINPUT = document.createElement('INPUT');
+    clonableINPUT.className = 'htCheckboxRendererInput';
+    clonableINPUT.type = 'checkbox';
+    clonableINPUT.setAttribute('autocomplete', 'off');
+
+    var CheckboxRenderer = function(instance, TD, row, col, prop, value, cellProperties) {
+
+        if (typeof cellProperties.checkedTemplate === "undefined") {
+            cellProperties.checkedTemplate = true;
+        }
+        if (typeof cellProperties.uncheckedTemplate === "undefined") {
+            cellProperties.uncheckedTemplate = false;
+        }
+
+        Handsontable.Dom.empty(TD); // TODO identify under what circumstances
+        // this line can be removed
+
+        var INPUT = clonableINPUT.cloneNode(false); // this is faster than
+        // createElement
+        if (value === cellProperties.checkedTemplate
+                || value === Handsontable.helper.stringify(cellProperties.checkedTemplate)) {
+            INPUT.checked = true;
+            TD.appendChild(INPUT);
+        } else if (value === cellProperties.uncheckedTemplate
+                || value === Handsontable.helper.stringify(cellProperties.uncheckedTemplate)) {
+            TD.appendChild(INPUT);
+        } else {
+            INPUT.className += ' noValue';
+            TD.appendChild(INPUT);
+        }
+
+        var $input = $(INPUT);
+
+        if (cellProperties.readOnly) {
+            $input.on('click', function(event) {
+                event.preventDefault();
+            });
+        } else {
+            $input.on('mousedown', function(event) {
+                event.stopPropagation(); // otherwise can confuse cell
+                // mousedown handler
+            });
+
+            $input.on('mouseup', function(event) {
+                event.stopPropagation(); // otherwise can confuse cell
+                // dblclick handler
+            });
+
+            $input.on('change', function() {
+                if (this.checked) {
+                    instance.setDataAtRowProp(row, prop, cellProperties.checkedTemplate);
+                } else {
+                    instance.setDataAtRowProp(row, prop, cellProperties.uncheckedTemplate);
+                }
+            });
+        }
+
+        if (!instance.CheckboxRenderer || !instance.CheckboxRenderer.beforeKeyDownHookBound) {
+            instance.CheckboxRenderer = {
+                beforeKeyDownHookBound : true
+            };
+
+            instance.addHook('beforeKeyDown', function(event) {
+                if (event.keyCode == Handsontable.helper.keyCode.SPACE) {
+
+                    var cell, checkbox, cellProperties;
+
+                    var selRange = instance.getSelectedRange();
+                    var topLeft = selRange.getTopLeftCorner();
+                    var bottomRight = selRange.getBottomRightCorner();
+
+                    for (var row = topLeft.row; row <= bottomRight.row; row++) {
+                        for (var col = topLeft.col; col <= bottomRight.col; col++) {
+                            cell = instance.getCell(row, col);
+                            cellProperties = instance.getCellMeta(row, col);
+
+                            checkbox = cell.querySelectorAll('input[type=checkbox]');
+
+                            if (checkbox.length > 0 && !cellProperties.readOnly) {
+
+                                if (!event.isImmediatePropagationStopped()) {
+                                    event.stopImmediatePropagation();
+                                    event.preventDefault();
+                                }
+
+                                for (var i = 0, len = checkbox.length; i < len; i++) {
+                                    checkbox[i].checked = !checkbox[i].checked;
+                                    $(checkbox[i]).trigger('change');
+                                }
+
+                            }
+
+                        }
+                    }
+                }
+            });
+        }
+    };
+    // Blank editor, because all the work is done by renderer
+    var CheckboxEditor = Handsontable.editors.BaseEditor.prototype.extend();
+
+    CheckboxEditor.prototype.beginEditing = function() {
+        var checkbox = this.TD.querySelector('input[type="checkbox"]');
+
+        if (checkbox) {
+            $(checkbox).trigger('click');
+        }
+
+    };
+
+    CheckboxEditor.prototype.finishEditing = function() {
+    };
+
+    CheckboxEditor.prototype.init = function() {
+    };
+    CheckboxEditor.prototype.open = function() {
+    };
+    CheckboxEditor.prototype.close = function() {
+    };
+    CheckboxEditor.prototype.getValue = function() {
+    };
+    CheckboxEditor.prototype.setValue = function() {
+    };
+    CheckboxEditor.prototype.focus = function() {
+    };
+
+    Handsontable.CheckboxCell = {
+        editor : CheckboxEditor,
+        renderer : CheckboxRenderer,
+    };
+    Handsontable.CheckboxRenderer = CheckboxRenderer;
+    Handsontable.renderers.CheckboxRenderer = CheckboxRenderer;
+    Handsontable.cellTypes['checkbox'] = Handsontable.CheckboxCell;
+    Handsontable.renderers.registerRenderer('checkbox', DateTimeRenderer);
 
     // How to use moment.js with jquery datetimepicker
     Date.parseDate = function(input, format) {
@@ -34,7 +174,10 @@
 
         var that = this;
         var defaultOptions = {
-            dateFormat : "yy-mm-dd",
+            dateFormat: $.datepicker.ISO_8601,
+            separator: 'T',
+            timeFormat: 'hh:mm:ssZ',
+            ampm: false,
             showButtonPanel : true,
             changeMonth : true,
             changeYear : true,
@@ -82,7 +225,8 @@
         if (this.originalValue) {
             this.$dateTimePicker.datetimepicker("setDate", this.originalValue);
         }
-        this.dateTimePickerStyle.display = 'block';
+        this.$dateTimePicker.datetimepicker("show");
+//        this.dateTimePickerStyle.display = 'block';
     };
 
     DateTimeEditor.prototype.hideDatepicker = function() {
@@ -95,15 +239,15 @@
     Handsontable.editors.registerEditor('datetime', DateTimeEditor);
 
     var DateRenderer = function(instance, TD, row, col, prop, value, cellProperties) {
-        value = value ? moment(value).format('ddd DD MMM, YYYY') : '';
+        value = value ? moment.utc(value).format('ddd DD MMM, YYYY') : '';
         Handsontable.renderers.AutocompleteRenderer(instance, TD, row, col, prop, value, cellProperties);
     };
     var TimeRenderer = function(instance, TD, row, col, prop, value, cellProperties) {
-        value = value ? moment(value).format('h:m a') : '';
+        value = value ? moment.utc(value).format('h:m a') : '';
         Handsontable.renderers.AutocompleteRenderer(instance, TD, row, col, prop, value, cellProperties);
     };
     var DateTimeRenderer = function(instance, TD, row, col, prop, value, cellProperties) {
-        value = value ? moment(value).format('ddd DD MMM, YYYY h:m a') : '';
+        value = value ? moment.utc(value).format('ddd DD MMM, YYYY h:m a') : '';
         Handsontable.renderers.AutocompleteRenderer(instance, TD, row, col, prop, value, cellProperties);
     };
 

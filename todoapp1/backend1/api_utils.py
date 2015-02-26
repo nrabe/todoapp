@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
 import sys
 import time
 import datetime
@@ -19,6 +20,8 @@ from django.views.decorators.cache import cache_control
 from django.core.validators import validate_email
 from django.core.management import call_command
 from error_messages import ERRORS
+
+from utils import LOG
 
 __all__ = [
            'ApiException',
@@ -166,6 +169,8 @@ def api_call(func):
 
     Do not rely too much on the request object (session, cookies, auth, GET, POST, path, etc)... it may be a fake request object ( when called from native python )
     """
+    if os.environ.get('IS_SPHINX_BUILD'):
+        return func
 
     assert func.__name__.startswith('api_')
     registered_api_calls[func.__name__] = func
@@ -199,15 +204,17 @@ def api_call(func):
             raise  # fatal, unexpected error
         finally:
             curr_user = get_curr_user(request, required=False)
-            logging_params = ((time.time() - _start_time) * 1000, func.__name__,
-                              ', '.join(['%s=%.512r' % (k, v) for k, v in kwargs.items()]), request.x_client_version,
+            logging_params = ((time.time() - _start_time) * 1000,
+                              func.__name__,
+                              ', '.join(['%s=%.512r' % (k, v) for k, v in kwargs.items()]),
+                              request.x_client_version,
                               curr_user and curr_user.email or '(anon)',
                               sys._getframe().f_back.f_code.co_name,
                               response or last_exception)
             if last_exception:
-                logging.error('[ERR % 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() exception=%.1024r\n', *logging_params)
+                LOG(level='warn', type='API', category='ERROR', message='[% 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() exception=%.1024r'%logging_params, exception=last_exception)
             elif settings.USE_API_LOGGING:
-                logging.info('[API % 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() response=%.1024r\n', *logging_params)
+                LOG(level='info', type='API', category='OK', message='[% 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() response=%.1024r'%logging_params)
 
     return decorated
 

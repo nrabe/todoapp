@@ -22,21 +22,21 @@ settings.PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
 )
 settings.USE_API_LOGGING = False
-
-for i in range(0, 10000):
+ 
+for i in range(0, 100):
     if i % 100 == 0:
         print 'mass users creating batch# %s' % i
     try:
         backend.api_signup(apicontext1, email=TEST_USER_EMAIL_FORMAT % i, password=TEST_USER_PASSWORD, first_name='test%s' % i, last_name='test%s' % i)
     except backend.ApiException, e:
         assert e.code == backend.ERRORS.signup_email_already_exists[0]
-
+ 
     response = backend.api_todolist_set(apicontext1, title='test1-%s' % i)
     todolist1 = response['todolist']
     response = backend.api_todolist_item_set(apicontext1, todolist_id=todolist1.id, text='test1-1-%s' % i)
     response = backend.api_todolist_item_set(apicontext1, todolist_id=todolist1.id, text='test1-2-%s' % i)
     response = backend.api_todolist_item_set(apicontext1, todolist_id=todolist1.id, text='test1-3-%s' % i)
-
+ 
     response = backend.api_todolist_set(apicontext1, title='test2-%s' % i)
     todolist1 = response['todolist']
     response = backend.api_todolist_item_set(apicontext1, todolist_id=todolist1.id, text='test2-1-%s' % i)

@@ -4,6 +4,8 @@ from todoapp1.settings.common import *  # @UnusedWildImport
 DEBUG = True
 TEMPLATE_DEBUG = True
 COMPRESS_ENABLED = False
+SKIP_EMAILS = True
+
 #LOGGING['loggers']['django.db']['level'] = 'DEBUG'  # enable/disable SQL logging
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"

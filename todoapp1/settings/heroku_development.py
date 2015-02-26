@@ -1,6 +1,6 @@
 from todoapp1.settings.common import *  # @UnusedWildImport
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = True
 
 # in DEV, enable the authentication middleware

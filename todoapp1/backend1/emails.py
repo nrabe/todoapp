@@ -9,6 +9,8 @@ from django.template import Context
 from django.conf import settings
 from pq.decorators import job
 
+from todoapp1.backend1.utils import LOG
+
 
 @job('default')
 def send_multipart_email_task(
@@ -39,7 +41,7 @@ def send_multipart_email_task(
 
     # NOTE: Skip certain emails. It makes unit testing way faster.
     if settings.SKIP_EMAILS:
-        logging.debug('SKIP.send_multipart_email_task %r %r' % (subject_content, to_email))
+        LOG(type='EMAIL', category='SKIP', message='skipping %r %r'% (subject_content, to_email))
         return
 
     logging.debug('SEND.send_multipart_email_task %r %r' % (subject_content, to_email))

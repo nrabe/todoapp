@@ -11,7 +11,6 @@ from api_utils import ApiException, api_call, param_string, param_integer, param
 
 import emails
 
-
 @api_call
 def api_sys_test(request, test=''):
     """ returns a list of configuration parameters ( server version, mood types, titles, etc )."""
@@ -26,7 +25,11 @@ def api_sys_test(request, test=''):
 
 @api_call
 def api_sys_create_test_data(request, also_remove=''):
-    """ removes and creates data for testing purposes, to be deleted by api_sys_remove_test_data."""
+    """
+    removes and creates data for testing purposes, to be deleted by api_sys_remove_test_data.
+
+    :param also_remove:
+    """
 
     response_json = {}
     api_sys_remove_test_data(request)
@@ -41,7 +44,11 @@ def api_sys_create_test_data(request, also_remove=''):
 
 @api_call
 def api_sys_remove_test_data(request, also_remove=''):
-    """ removes the data created by api_sys_create_test_data and other testing processes."""
+    """
+    removes the data created by api_sys_create_test_data and other testing processes.
+
+    :param also_remove:
+    """
     response_json = {}
 
     UserProfile.objects.filter(email__startswith=settings.TEST_USER_PREFIX).delete()
@@ -50,7 +57,7 @@ def api_sys_remove_test_data(request, also_remove=''):
         # due to sqlite limitations, we must delete in batches...
         while UserProfile.objects.filter(email__startswith=settings.TEST_USER_PREFIX2):
             logging.debug('mass users deleting...')
-            ids = UserProfile.objects.values_list('pk', flat=True)[:100]
+            ids = UserProfile.objects.filter(email__startswith=settings.TEST_USER_PREFIX2).values_list('pk', flat=True)[:100]
             UserProfile.objects.filter(pk__in=ids).delete()
     response_json['ok'] = 1
     return response_json
@@ -58,7 +65,12 @@ def api_sys_remove_test_data(request, also_remove=''):
 
 @api_call
 def api_config(request):
-    """ returns a list of configuration parameters ( server version, mood types, titles, etc )."""
+    """
+    returns a list of configuration parameters ( server version, mood types, titles, etc ).
+
+    :param request:
+    :return:
+    """
     response_json = {}
     # response_json['mood_types'] = [{'moodtype': x.moodtype, 'title': x.title} for x in MoodType.objects.order_by('title')]
     response_json['photos_prefix'] = 'http://dummy.com/'
@@ -67,13 +79,24 @@ def api_config(request):
 
 @api_call
 def api_todolist(request, todolist_id=None, search=None, category=None):
-    """ update or create a TO-DO List"""
+    """
+    returns one or more TO-DO Lists. At least one of the parameters is required.
+
+    :param todolist_id:
+    :param search:
+    :param category:
+    :return: :json:`{"todolists": [{"id": ""},]}`
+    :raises ApiException: (200, 'Missing or invalid parameter FIELD_NAME VALUE')
+    """
 
     curr_user = get_curr_user(request, required=True)
 
     search = param_string(search, required=False, blank=False, field_name='search')
     category = param_string(category, required=False, blank=False, field_name='category')
     todolist_id = param_integer(todolist_id, required=False, blank=False, field_name='todolist_id')
+
+    if not (search or category or todolist_id):
+        raise ApiException(*ERRORS.invalid_parameter)
 
     todolists = TODOList.list(search=search, category=category, curr_user=curr_user, todolist_id=todolist_id)
 
@@ -84,7 +107,16 @@ def api_todolist(request, todolist_id=None, search=None, category=None):
 
 @api_call
 def api_todolist_set(request, todolist_id=None, title=None, comments=None, category=None, status=None):
-    """ update or create a TO-DO List"""
+    """
+    update or create a TO-DO List
+
+    :param todolist_id: (optional when creating)
+    :param title: (optional when updating)
+    :param comments: (optional when updating)
+    :param category: (optional when updating)
+    :param status: (optional when updating)
+    :return: :json:`{"todolist": {"id": ""}}`
+    """
 
     curr_user = get_curr_user(request, required=True)
 
@@ -162,7 +194,18 @@ def _signin(request, email=None, password=None):
 
 @api_call
 def api_signup(request, email=None, password=None, first_name=None, last_name=None):
-    """ registers a new user and authenticates it """
+    """
+    registers a new user and authenticates it
+
+    :param email:
+    :param password:
+    :param first_name:
+    :param last_name:
+    :return: :json:`{"profile": {"id": ""}, "sessionid": ""}`
+    :raises ApiException: (200, 'Missing or invalid parameter FIELD_NAME VALUE')
+    :raises ApiException: (402, 'Invalid email address or password')
+    :raises ApiException: (403, 'Email address already registered')
+    """
 
     email = param_email(email, required=True, blank=False, field_name='email')
     password = param_string(password, required=True, blank=False, field_name='password')
@@ -184,7 +227,14 @@ def api_signup(request, email=None, password=None, first_name=None, last_name=No
 
 @api_call
 def api_signin(request, email=None, password=None):
-    """ authenticates the user """
+    """
+    authenticates the user
+
+    :param email:
+    :param password:
+    :return: :json:`{"profile": {"id": ""}, "sessionid": ""}`
+    :raises ApiException: (200, 'Missing or invalid parameter FIELD_NAME VALUE')
+    """
     response_json = _signin(request, email=email, password=password)
     return response_json
 
@@ -200,7 +250,12 @@ def api_signout(request):
 
 @api_call
 def api_profile(request):
-    """ returns the current user profile ( just as signin/signup does ). Authentication required. """
+    """
+    returns the current user profile ( just as signin/signup does ). Authentication required.
+
+    :return: :json:`{"profile": {"id": ""}, "sessionid": ""}`
+    :raises ApiException: (401, 'Authentication required')
+    """
     curr_user = get_curr_user(request, required=True)
 
     response_json = {}
@@ -210,7 +265,15 @@ def api_profile(request):
 
 @api_call
 def api_profile_update(request, email=None, password=None, first_name=None, last_name=None):
-    """ updates and returns the current user profile. Authentication required. """
+    """
+    updates and returns the current user profile. Authentication required.
+
+    :return: :json:`{"profile": {"id": ""}, "sessionid": ""}`
+    :raises ApiException: (401, 'Authentication required')
+    :raises ApiException: (200, 'Missing or invalid parameter FIELD_NAME VALUE')
+    :raises ApiException: (402, 'Invalid email address or password')
+    :raises ApiException: (403, 'Email address already registered')
+    """
     curr_user = get_curr_user(request, required=True)
 
     email = param_email(email, blank=False, field_name='email')
@@ -226,6 +289,7 @@ def api_profile_update(request, email=None, password=None, first_name=None, last
         curr_user.first_name = first_name
     if last_name is not None:
         curr_user.last_name = last_name
+    curr_user.full_clean()
     curr_user.save()
 
     response_json = {}

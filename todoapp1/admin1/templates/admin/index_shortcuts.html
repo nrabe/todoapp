@@ -1,7 +1,11 @@
 
 <ul class="nav nav-pills nav-stacked">
-    <li><a href="{% url 'admin:backend1_userprofile_changelist' %}">Users</a></li>
-    <li><a href="{% url 'handsontable_users' %}">User's Grid</a></li>
-    <li><a href="{% url 'admin:backend1_handsontabledemo_changelist' %}">Demo Grid</a></li>
+    <li><a href="{% url 'admin:backend1_userprofile_changelist' %}">Userprofiles</a></li>
+    <li><a href="{% url 'spreadsheet_userprofile' %}">Spreadsheet: Userprofiles</a></li>
+    <li><a href="{% url 'spreadsheet_demo' %}">Spreadsheet: Demo</a></li>
+    <li><a href="{% url 'spreadsheet_handsontabledemo' %}">Spreadsheet: Demo (generic)</a></li>
+    <li><a href="{% url 'admin:backend1_handsontabledemo_changelist' %}">admin handsontabledemo</a></li>
     <li><a href="{% url 'admin:backend1_todolist_changelist' %}">TO-DO lists</a></li>
+    <li><a href="{% url 'spreadsheet_todolist' %}">Spreadsheet: TO-DO List</a></li>
 </ul>
+

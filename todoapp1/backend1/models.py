@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import logging
+import time
+import uuid
 
 from django.db import models
 from django.db import transaction
-from django.contrib.auth.models import User as DjangoUser
 from django.db.utils import IntegrityError
+from django.contrib.auth.models import User as DjangoUser
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
+from django.core.exceptions import ObjectDoesNotExist
 
 from api_utils import ApiException
 from error_messages import ERRORS
-
 
 from django.db.backends.signals import connection_created
 from django.dispatch import receiver
@@ -22,23 +24,51 @@ def extend_sqlite(connection=None, **kwargs):
             return ''.join(args)
         connection.connection.create_function("concat", -1, pg_concat)
 
+# monkey-patching django to allow for usernames > 30 chars. The SQL table must be changed MANUALLY
+from django.contrib.auth.models import User
+from django.core.validators import MaxLengthValidator
+username = User._meta.get_field("username")
+username.max_length = 254
+for v in username.validators:
+    if isinstance(v, MaxLengthValidator):
+        v.limit_value = 254
+
+
+def _unique_rname():
+    return u'#%s' % uuid.uuid4().hex
+
 
 class BaseModel(models.Model):
     class Meta:
         abstract = True
-    rname = models.CharField(max_length=255, null=False, blank=False, default='(no rname)', help_text='Internal object name (fit for admin/backend tasks only, must be unique)', unique=True)
+    rname = models.CharField(max_length=255, null=False, blank=True, unique=True,
+                             default=_unique_rname,
+                             help_text='Internal object name (fit for admin/backend tasks, must be unique)')
     date_created = CreationDateTimeField()
     date_updated = ModificationDateTimeField()
 
-    def save(self, *args, **kwargs):
-        self.rname = self.rname or self.id or None
-        super(BaseModel, self).save(*args, **kwargs)
-        if not self.rname:
-            self.rname = unicode(self.id)
-            self.save()
-
     def __unicode__(self):
         return self.rname or '(no rname)'
+
+    @classmethod
+    def upsert(cls, conds=None, **kwargs):
+        assert conds
+        try:
+            rec = cls.objects.get(**conds)
+        except ObjectDoesNotExist:
+            rec = cls()
+        for k, v in kwargs.items():
+            setattr(rec, k, v)
+        rec.save()
+        return rec
+
+    def save(self, *args, **kwargs):
+        try:
+            super(BaseModel, self).save(*args, **kwargs)
+        except IntegrityError:
+            # if there is an integrity error, chances are it's because rname. Retry
+            self.rname += ' #' + _unique_rname()
+            super(BaseModel, self).save(*args, **kwargs)
 
 
 class UserProfile(DjangoUser):
@@ -74,6 +104,7 @@ class UserProfile(DjangoUser):
                 first_name=first_name,
                 last_name=last_name,
               )
+            curr_user.full_clean()
             curr_user.save()
         except IntegrityError:
             raise ApiException(*ERRORS.signup_email_already_exists)
@@ -158,8 +189,7 @@ class TODOList(BaseModel):
         return results
 
     def save(self, *args, **kwargs):
-        self.rname = '%s, by %s' % (self.title, self.created_by.email)
-        logging.warn([self.rname, args, kwargs])
+        self.rname = '%s, by %s %s' % (self.title, self.created_by.email, _unique_rname())
         super(TODOList, self).save(*args, **kwargs)
 
     def serialize(self):
@@ -251,3 +281,7 @@ class HandsontableDemo(BaseModel):
     test_datetime_null = models.DateTimeField(null=True, blank=True)
     test_date = models.DateField(null=True, blank=True)
     test_time = models.TimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.rname = '%s %s %s' % (self.test_charfield, self.test_foreign_key, _unique_rname())
+        super(HandsontableDemo, self).save(*args, **kwargs)

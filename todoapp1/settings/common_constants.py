@@ -13,3 +13,8 @@ TEST_USER_PASSWORD = 'test%s' % random.randint(0, 999999)
 
 WEBSITE_URL = ''
 SITE_TITLE = ''
+
+import pytz
+DISPLAY_TIME_ZONE = pytz.timezone('US/Pacific')  # default display timezone.
+from django.utils import timezone
+timezone.activate(DISPLAY_TIME_ZONE)

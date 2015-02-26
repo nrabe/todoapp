@@ -1,386 +1,85 @@
-{% extends "admin/base_site.html" %} {% load i18n admin_static %} {% block content_title %}
-<a class="navbar-brand" href="{{link_list}}"> Central data repository: restaurants </a>
+{% extends "admin/base_site.html" %} {% load i18n static %} {% block content_title %}
+<a class="navbar-brand" href="{{link_list}}"> Central data repository: {{title}} </a>
 
 <form class="navbar-form navbar-right" role="search" id="changelist-search" action="" method="get">
     <div class="form-group">
         <!-- DIV needed for valid HTML -->
         <input type="search" class="form-control search-query" placeholder="Search" size="40" name="q" value="{{search_term}}" id="searchbar" autofocus>
     </div>
-    <input type="hidden" name="filt_CITY_REGION" value="{{filt_CITY_REGION}}" />
 </form>
-{% endblock %} {% block content %}
 
-<link rel="stylesheet" media="screen" href="//cdn.madebyglutard.com/libs/jquery-handsontable/0.11.0-beta.3/jquery.handsontable.full.css">
-<script src="//cdn.madebyglutard.com/libs/jquery-handsontable/0.11.0-beta.3/jquery.handsontable.full.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min.js"></script>
+<!--
+<link rel="stylesheet" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/handsontable/0.12.2/handsontable.full.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/handsontable/0.12.2/handsontable.full.min.js"></script>
+-->
+
+<script src="{% static 'handsontable.full.js' %}"></script>
+<link rel="stylesheet" media="screen" href="{% static 'handsontable.full.css' %}">
+
+
+<link href="{% static 'bootstrap-datetimepicker.min.css' %}" rel="stylesheet" media="screen">
+<script type="text/javascript" src="{% static 'bootstrap-datetimepicker.js' %}" charset="UTF-8"></script>
+
 
 <link rel="stylesheet" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.min.css">
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 
-<link rel="stylesheet" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.css">
-<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.js"></script>
-<script src="{% static 'handsontable_datetimewidget.js' %}"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min.js"></script>
+<!--
+<link rel="stylesheet" media="screen" href="{% static 'jquery.datetimepicker.css' %}">
+<script type="text/javascript" src="{% static 'jquery.datetimepicker.js' %}"></script>
+-->
+
+<script src="{% static 'hot_customcells.js' %}"></script>
+
+
+
+<!--
+<link href="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css" />
+<script src="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js"></script>
+-->
+
+<script type="text/javascript">
+var Hotgrid = {};
+Hotgrid.SPECIAL_PREFIX = '{{SPECIAL_PREFIX}}';
+Hotgrid.TEMP_ID_PREFIX = Hotgrid.SPECIAL_PREFIX+'_pk__';
+Hotgrid.MAX_ROWS = {{MAX_ROWS}};
+Hotgrid.url_load_save = window.location.href; // the save action  is simply POSTing to the same url
+Hotgrid.table_columns = {{table_columns|safe}};
+Hotgrid.table_data = {{table_data|safe}};
+</script>
+
+<script type="text/javascript">
+{% include 'handsontable_base.js'%}
+</script>
 
 <style type="text/css">
-td.htInvalid {
-	-webkit-transition: background 0.75s ease;
-	transition: background 0.75s ease;
-	background-color: #f2dede !important;
-}
-
-tr.htInvalid td {
-	-webkit-transition: background 0.75s ease;
-	transition: background 0.75s ease;
-	background-color: #f2dede;
-}
-
-#save_notification {
-	text-align: right;
-}
+.handsontable td.forceInvalid { background-color: #ff4c42; }
+.handsontable tr:last-child td.htInvalid { background-color: #ffffff !important; }
 
 /* to leave enough margin for the footer */
 body {
-	padding-bottom: 60px;
+    padding-bottom: 60px;
 }
+
+/* set max widths for columns and put the autocomplete arrow to the right top, always */
+table.htCore tbody tr td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
+    position: relative;
+}
+.handsontable .htAutocompleteArrow {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+
+.datetimepicker { background-color: white; border: outset; z-index: 2000; }
 </style>
 
-<script type="text/javascript">
-    var Hotgrid = {};
-    Hotgrid.SPECIAL_PREFIX = '{{SPECIAL_PREFIX}}';
-    Hotgrid.TEMP_ID_PREFIX = Hotgrid.SPECIAL_PREFIX+'_Id__';
-    Hotgrid.MAX_ROWS = {{MAX_ROWS}};
-    Hotgrid.handsontable_instance = null;
-    Hotgrid.url_load_save = window.location.pathname; // the save action  is simply POSTing to the same url
-    Hotgrid.table_columns = {{table_columns|safe}};
-    Hotgrid.table_column_no_by_name_idx = {}; // index to quickly lookup column index by property name
-    Hotgrid.table_columns_foreignkey_idx = {} // map of columns to lookup ( foreign keys )
-    Hotgrid.table_columns_lookup_idx = {} // map of columns to lookup ( fields with "choices" )
-    Hotgrid.table_data = [];
-    Hotgrid.table_headers = [];
-
-    Hotgrid.table_data_pk_idx = {};
-    Hotgrid.flag_is_readonly = true;
-    Hotgrid.list_of_unsaved_changes = [];
-    Hotgrid.list_of_unsaved_changes_idx = {}; // maps list_of_unsaved_changes by pk, for quick access
-
-    // Disable auto scroll up when pasting into a cell
-    // http://stackoverflow.com/questions/24593357/handsontable-disable-auto-scroll-up-when-pasting-into-a-cell
-    $(function() {
-        var position_Y_before = null;
-        $(".handsontable").handsontable({
-            //some code here for initializing the table and its functions
-            //Then I added this callback function
-            beforeKeyDown: function(e) {
-                position_Y_before = window.pageYOffset || 0;
-            }
-        });
-        //Here we prevent from scrolling to top of page after pasting to handsontable with cmd+v or ctrl+v
-        $(window).scroll(function(){
-            if(position_Y_before != null){
-                window.scrollTo(0, position_Y_before);
-                position_Y_before = null;
-            }
-        });
-    });
-
-    // hide the boostrap header, because it interferes with the fixed handsontable columns header
-    $(function() {
-        $(window).scroll(function(){
-            var aTop = $(this).scrollTop();
-            window.clearTimeout(window.headerHiderTimeout);
-            window.headerHiderTimeout = window.setTimeout(function() {
-                $('.navbar-fixed-top').css('display', (aTop>80)?'none':'block');
-            }, 100);
-          });
-    });
-    
-    // django/jquery setup (csrf protection)
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    var csrftoken = getCookie('csrftoken');
-    function csrfSafeMethod(method) {
-        // these HTTP methods do not require CSRF protection
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
-    });
-    
-    window.onbeforeunload = function(){
-        if(Hotgrid.list_of_unsaved_changes.length) {
-            return 'You have unsaved changes';
-        }
-    };
-    
-    function change_record_field(rowno, field, val, flag_remove) {
-        var colno = Hotgrid.table_column_no_by_name_idx[field];
-        // add the change to an existing (or new) record in "list_of_unsaved_changes"
-        var rec_id = Hotgrid.table_data[rowno] && Hotgrid.table_data[rowno].id || (Hotgrid.TEMP_ID_PREFIX+rowno);
-        var rec = Hotgrid.list_of_unsaved_changes_idx[rec_id];
-        if(!rec) {
-            // CREATE
-            rec = {'id': rec_id};
-            Hotgrid.list_of_unsaved_changes_idx[rec_id] = rec;
-            Hotgrid.list_of_unsaved_changes.push(rec);
-        }
-        if(flag_remove) {
-            // DELETE
-            rec[Hotgrid.SPECIAL_PREFIX+'_flag_delete_record__'] = true;
-        }else{
-            // UPDATE
-            rec[field] = val;
-        }
-        var def = null;
-        if(def = Hotgrid.table_columns_foreignkey_idx[field]) {
-            rec[def.fieldname] = def.lookup_choices_text_idx[val]||null;
-        }
-        if(def = Hotgrid.table_columns_lookup_idx[field]) {
-            rec[def.fieldname] = def.lookup_choices_text_idx[val]||null;
-        }
-        rec[Hotgrid.SPECIAL_PREFIX+'rowno'] = rowno; // save the grid position, so errors sent from the server can be rendered.
-        // UI feedback, coloring the changed rows and displaying messages to the user
-        console.log('HOT-Grid record changed...', field,'=', val, 'rec=', rec);
-        $('#change_counter').text(''+Hotgrid.list_of_unsaved_changes.length+' unsaved record(s)');
-    }
-    
-    // sends the changes (if any) to the server and load the new data
-    function load_save(discard_changes) {
-        $('#list_notification').text('Loading...');
-        console.log('HOT-Grid request... url=', Hotgrid.url_load_save, 'changes=', Hotgrid.list_of_unsaved_changes);
-        if(discard_changes) {
-            Hotgrid.list_of_unsaved_changes = [];
-            Hotgrid.list_of_unsaved_changes_idx = {};
-        }
-        console.log('HOT-Grid request... request=', Hotgrid.list_of_unsaved_changes);
-        $.ajax({
-            url: Hotgrid.url_load_save,
-            dataType: 'json',
-            type: 'POST',
-            data: {
-                changes: JSON.stringify(Hotgrid.list_of_unsaved_changes)
-            },
-            success: function(response) {
-                console.log('HOT-Grid response... response=', response);
-                if(response.errors&&response.errors.length) {
-                    var error_messages_text = []
-                    $.each(response.errors, function(idx, e) {
-                        error_messages_text.push(e.error);
-                        var rowno = e.item._hOt_rowno;
-                        var colno = Hotgrid.handsontable_instance.propToCol('id')
-                        var cellProperties = Hotgrid.handsontable_instance.getCellMeta(rowno, 0);
-                        cellProperties.server_valid=false;
-                    });
-                    // UI
-                    error_messages_text = error_messages_text.join('\n- ');
-                    alert('There were errors while saving the changes:\n\n- '+ error_messages_text);
-                    editing_enable();
-                    Hotgrid.handsontable_instance.validateCells(function() { Hotgrid.handsontable_instance.render(); });
-                }else{
-                    Hotgrid.table_data = response.table_data;
-                    Hotgrid.handsontable_instance.loadData(Hotgrid.table_data);
-                    // discard the already saved changes
-                    Hotgrid.list_of_unsaved_changes = [];
-                    Hotgrid.list_of_unsaved_changes_idx = {};
-                    // UI
-                    var msg = ''+Hotgrid.table_data.length+' row(s).';
-                    if(Hotgrid.table_data.length >= Hotgrid.MAX_ROWS)
-                        var msg = ''+Hotgrid.table_data.length+'+ row(s). You should filter/search the results to reduce the list.';
-                    $('#list_notification').text(msg);
-                }
-            },
-            error: function() {
-                alert( "There was an error on the server, and the changes were not saved. The administrations have been notified." );
-            },
-        });
-    }
-    
-    function editing_enable() {
-        $('#footer_buttons_while_browsing').css('display', 'none');
-        $('#footer_buttons_while_editing').css('display', 'inline');
-        Hotgrid.flag_is_readonly = false;
-        $('#handsontable_main').handsontable('getInstance').updateSettings({readOnly: Hotgrid.flag_is_readonly, minSpareRows: 1 });
-        $('#change_counter').html('');
-        $('#list_notification').html('<b>Change the contents of the spreadsheet and press Save to store the changes</b>');
-    }
-    function editing_disable() {
-        $('#footer_buttons_while_browsing').css('display', 'inline');
-        $('#footer_buttons_while_editing').css('display', 'none');
-        Hotgrid.flag_is_readonly = true;
-        $('#handsontable_main').handsontable('getInstance').updateSettings({readOnly: Hotgrid.flag_is_readonly, minSpareRows: 0 });
-        $('#change_counter').html('Double-click the spreadsheet or press:');
-    }
-    // show a link when in read-only mode, and just a plain text when editing
-    var detaillink_Renderer = function (instance, td, row, col, prop, value, cellProperties) {
-        if(Hotgrid.flag_is_readonly) {
-            var url = cellProperties.detail_url.replace('%28id%29', value);
-            td.innerHTML = '<a href="'+url+'" class="btn btn-primary btn-xs" style="width: 100%;" title="Detail view">'+Handsontable.helper.stringify(value)+'</a>';
-            return td;
-        }else{
-            Handsontable.renderers.TextRenderer.apply(this, arguments);
-        }
-    };
-    
-    $(function() {
-        // Enable/disable editing
-        $('#edit_sheet').on('click', function () {
-            editing_enable();
-        });
-        $('#cancel_sheet').on('click', function () {
-            if( Hotgrid.list_of_unsaved_changes.length<=0 || confirm('You have unsaved changes, are you sure you want to dicard them?')) {
-                editing_disable();
-                load_save(true);
-            }
-        });
-        $('#save_sheet').on('click', function () {
-            if(Hotgrid.list_of_unsaved_changes.length) {
-                $('#save_notification').text('Saving...');
-            }else{
-                $('#save_notification').text('No changes made.');
-            }
-            window.setTimeout(function() {
-                $('#save_notification').text('');
-            }, 1000);
-            editing_disable();
-            load_save();
-        });
-
-        // index to quickly lookup records  by pk
-        $.each(Hotgrid.table_data, function(rowno, item) {
-            item._hg_rowno = rowno;
-            Hotgrid.table_data_pk_idx[item.pk] = item;
-        });
-
-        // process each column, adding callbacks and validators
-        var table_columns_lookup_idx = {};
-        $.each(Hotgrid.table_columns, function(idx, def) {
-            def.validator = function(value, callback) {
-                if (value || this.djangoBlank || this.readOnly) {
-                    callback(true);
-                } else {
-                    callback(false);
-                }
-            };
-            // foreignkey field special setup.
-            if (def.type == 'foreignkey') {
-                def.type = 'autocomplete';
-                Hotgrid.table_columns_foreignkey_idx[def.data] = def;
-                def.lookup_choices = {};
-                def.lookup_choices_text_idx = {};
-                def.strict = true;
-                def.allowInvalid = false;
-                def.source = function (query, process) {
-                    $.ajax({
-                        url: def.lookup_remote_url,
-                        dataType: 'json',
-                        data: {
-                            query: query
-                        },
-                        success: function (response) {
-                            console.log("response", response);
-                            var temp = [];
-                            $.each(response.items, function (dummy, o) {
-                                temp.push(o.text);
-                                def.lookup_choices[o.id] = o.text;
-                                def.lookup_choices_text_idx[o.text] = o.id;
-                            });
-                            process(temp);
-                        }
-                    });
-                };
-            }
-            // any field with "choices"".
-            if (def.type == 'lookup') {
-                def.type = 'dropdown';
-                Hotgrid.table_columns_lookup_idx[def.data] = def;
-                def.strict = true;
-                def.allowInvalid = false;
-                def.source = [];
-                def.lookup_choices_text_idx = {};
-                if (def.djangoBlank||def.djangoNull) {
-                    def.lookup_choices[''] = '';
-                }
-                $.each(def.lookup_choices, function (key, text) {
-                    def.source.push(text);
-                    def.lookup_choices_text_idx[text] = key;
-                });
-            }
-            console.log(def)
-            console.log(def.renderer)
-            if (def.renderer == 'detaillink_Renderer') {
-                def.renderer = detaillink_Renderer;
-            }
-            
-            Hotgrid.table_column_no_by_name_idx[def.data] = idx;
-            Hotgrid.table_headers.push(def.label||def.data);
-        });
-
-        var timeout_save_changes = null;
-        var container = $('#handsontable_main');
-        container.handsontable({
-            colHeaders : Hotgrid.table_headers,
-            columns : Hotgrid.table_columns,
-            data : Hotgrid.table_data,
-            readOnly: true,
-            fixedRowsTop: 0,
-            minSpareRows : 0,
-            stretchH: 'none',
-            fillHandle : false, 
-            c1ontextMenu: {
-                items: {
-                    "remove_row": {
-                        name: 'Remove this row',
-                        disabled: function () {
-                            return Hotgrid.flag_is_readonly;
-                        }
-                    },
-                }
-            },
-            afterChange: function(changes, source) {
-                if(!changes) return;
-                $.each(changes, function(i, change) {
-                    var rowno=change[0], field=change[1], oldVal=change[2], newVal=change[3];
-                    // if the cell changed AND it's not just as empty as it was before
-                    if(oldVal!==newVal) {
-                        if( oldVal===undefined && newVal==='' )
-                            return;
-                        change_record_field(rowno, field, newVal);
-                    }
-                });
-            },
-            beforeRemoveRow: function(index, amount) {
-                var index_amount = index + amount;
-                for(var rowno=index ; rowno < index_amount; rowno++ ) {
-                    change_record_field(rowno, 'id', null, true);
-                }
-            },
-            //afterRenderer: function(TD, row, col, prop, value, cellProperties) {
-            //    console.log(cellProperties.data, cellProperties.valid);
-            //}
-        });
-        Hotgrid.handsontable_instance = $('#handsontable_main').handsontable('getInstance');
-        load_save();
-        $('#handsontable_main').dblclick(function() {
-            editing_enable();
-        });
-    });
-</script>
+{% endblock %} {% block content %}
 
 <div id="handsontable_main" class="handsontable"></div>
 
@@ -389,9 +88,9 @@ body {
         <span class="navbar-brand" id="list_notification">Loading...</span>
         <div class="navbar-right">
             <div class="navbar-brand" id="save_notification"></div>
-            <span class="navbar-brand" id="change_counter">Double-click the spreadsheet or press:</span> <span id="footer_buttons_while_browsing">
+            <span id="footer_buttons_while_browsing"> <span class="navbar-brand" id="click_to_edit_message">Double-click the spreadsheet or press:</span>
                 <button type="button" class="btn btn-primary  navbar-btn" id="edit_sheet">Edit sheet</button>
-            </span> <span id="footer_buttons_while_editing" style="display: none">
+            </span> <span id="footer_buttons_while_editing" style="display: none"> <span class="navbar-brand" id="change_counter"></span>
                 <button type="button" class="btn navbar-btn btn-warning" id="cancel_sheet">Cancel</button>
                 <button type="button" class="btn navbar-btn btn-success" id="save_sheet">Save Changes</button>
             </span>

@@ -1,0 +1,2 @@
+Sphinx # documentation generator
+coverage # code coverate reporting tool

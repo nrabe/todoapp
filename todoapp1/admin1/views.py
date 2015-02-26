@@ -1,34 +1,39 @@
 # -*- coding: utf-8 -*-
-import os
 import logging
 import json
 from collections import OrderedDict  # @UnresolvedImport
-import pprint
 
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
-from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse, JsonResponse
-from django.db import transaction
-from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.fields.related import ForeignKey
+from django.db.models import Q
+from django.db.models.loading import get_model
 
 from todoapp1.backend1.models import UserProfile, HandsontableDemo
+from handsontable import handsontable_process_rows, handsontable_generic_save
 
 
 @staff_member_required
-def generic_userprofile_autocomplete(request):
+def generic_autocomplete(request, app_name, model_name, field_name):
+    """ general autocomplete for all models: it searches/shows the rname field only. """
     MAX_ROWS = 20
+    model = get_model(app_name, model_name)
     search_term = request.GET.get('query') or ''
-    query = UserProfile.objects.order_by('first_name', 'last_name')
-    if search_term:
-        query = query.filter(email__icontains=search_term)
+    if model_name == 'userprofile':
+        query = model.objects.order_by('email')
+        if search_term:
+            query = query.filter(email__icontains=search_term)
+    else:
+        query = model.objects.order_by('rname')
+        if search_term:
+            query = query.filter(rname__icontains=search_term)
+    logging.debug('generic_autocomplete() query=%s', query.query)
     query = query[:MAX_ROWS]
-    items = [{'id': e.id, 'text': '%s %s %s' % (e.first_name, e.last_name, e.email)} for e in query]
+    items = [{'id': e.id, 'text': unicode(e)} for e in query]
     return JsonResponse({'items': items}, safe=False)
 
 
@@ -36,100 +41,14 @@ HANDSONTABLE_FIELD_PREFIX = '_hOt_'  # temporary ID prefix for new records, and 
 HANDSONTABLE_MAX_ROWS = 100
 
 
-class RecordErrors(Exception):
-    pass
-
-
-def handsontable_process_rows(row, changes, table_cols_idx_by_name):
-    """  pre-process each row according to the column definition """
-    pass
-
-
-def handsontable_process_change(change, table_cols_ids):
-    """  validates and process the the changes to be made the record """
-
-    pk = change.get('id', None)
-    assert pk is not None, 'a change without an ID field? %r' % change
-    if str(pk).startswith(HANDSONTABLE_FIELD_PREFIX + '_Id__'):
-        pk = None  # new record
-    if change.get(HANDSONTABLE_FIELD_PREFIX + '_flag_delete_record__'):
-        assert pk is not None, 'a delete without an ID field? %r' % change
-        return pk, True, None
-    values = {k: v for k, v in change.items() if k != 'id' and not k.startswith(HANDSONTABLE_FIELD_PREFIX)}
-    for coldef in table_cols_ids:
-        name = coldef['data']
-        if coldef['type'] == 'foreignkey':
-            name_label = name + '__L'
-            if name_label in values:
-                assert name in values, 'missing field: %s %r' % (name, values)
-                values[name + '_id'] = values.pop(name)  # replace fieldname=pk with fieldname_id=pk
-                values.pop(name_label)  # discard the label part
-        elif coldef['type'] == 'lookup':
-            name_label = name + '__L'
-            if name in values:
-                assert name in values, 'missing field: %s_id %r' % (name, values)
-                values.pop(name_label)  # discard the label part
-        elif coldef['type'] == 'datetime':
-            pass
-        elif coldef['type'] == 'date':
-            pass
-        elif coldef['type'] == 'time':
-            pass
-    return pk, False, values
-
-
-def handsontable_demo_save(changes, table_cols_ids):
-    errors = []
-    # NOTE: I'm not sure this is the right way to handle transactions in the new Django 1.6+ way...
-    # but we *need* to catch and store errors on a per-record basis, to send back to the page.
-    try:
-        with transaction.atomic():
-            flag_error = False
-            for change in changes:
-                with transaction.atomic():
-                    try:
-                        pk, delete, values = handsontable_process_change(change, table_cols_ids)
-                        if not pk:
-                            rec = HandsontableDemo()
-                        else:
-                            rec = HandsontableDemo.objects.get(pk=pk)
-                            if delete:
-                                rec.delete()
-                                continue
-                        for k, v in values.items():
-                            setattr(rec, k, v)
-                        rec.full_clean()
-                        rec.save()
-                    except ValidationError, e:
-                        logging.error('handsontable_users() change=%r validation=%r', change, e)
-                        temp = getattr(e, 'error_dict', {})
-                        if temp:
-                            for fn, fe in temp.items():
-                                errors.append({'error': repr(fe), 'field': fn, 'item': change})
-                        else:
-                            for fe in e.messages:
-                                errors.append({'error': repr(fe), 'item': change})
-                        flag_error = True
-                    except Exception, e:
-                        # unexpected (non-validation) error...
-                        logging.error('handsontable_users() change=%r error=%r', change, e)
-                        errors.append({'error': repr(e), 'item': change})
-                        flag_error = True
-            if flag_error:
-                raise RecordErrors()
-    except RecordErrors, e:
-        pass  # it was expected, so no worriers
-    return errors
-
-
 @staff_member_required
-def handsontable_demo(request):
+def spreadsheet_demo(request):
     """ defines/displays the HandsontableDemoTable's spreadsheet, and loads/saves the data. """
+
     context = RequestContext(request)
     search_term = request.GET.get('q') or ''
     context['search_term'] = search_term or ''
     table_cols = []
-
     #
     # very simple (and unnecessary) automatic column definitions
     # manually defining the "table_cols" array is usually better
@@ -144,6 +63,7 @@ def handsontable_demo(request):
         table_cols.append(coldef)
         if isinstance(field, models.BooleanField):
             coldef['type'] = 'checkbox'
+            # coldef['renderer'] = 'checkbox1'
         elif isinstance(field, models.NullBooleanField):
             coldef['type'] = 'checkbox'
         elif isinstance(field, models.DateTimeField):
@@ -155,12 +75,16 @@ def handsontable_demo(request):
         elif isinstance(field, models.ForeignKey):
             table_cols.append({'data': coldef['data'] + '_id', 'type': 'hidden'})
             coldef['type'] = 'foreignkey'
-            coldef['fieldname'] = coldef['data']
+            coldef['fieldname'] = coldef['data'] + '_id'
             coldef['data'] += '__L'
-            coldef['lookup_remote_url'] = reverse('admin:backend1_handsontabledemo_autocomplete', args=[coldef['fieldname']])
+            coldef['lookup_remote_url'] = reverse('generic_autocomplete', kwargs={
+                                                                                  'app_name': 'backend1',
+                                                                                  'model_name': 'userprofile',
+                                                                                  'field_name': coldef['fieldname']})
         elif isinstance(field, models.IntegerField):
             coldef['type'] = 'numeric'
         elif isinstance(field, models.DecimalField):
+            coldef['format'] = '$0,0.00'
             coldef['type'] = 'numeric'
         if field.choices:
             table_cols.append({'data': coldef['data'], 'type': 'hidden'})
@@ -168,22 +92,21 @@ def handsontable_demo(request):
             coldef['fieldname'] = coldef['data']
             coldef['data'] += '__L'
             coldef['lookup_choices'] = OrderedDict(field.choices)
-    table_cols_idx_by_name = {d['data']: d for d in table_cols}  # index, needed in the validation part
+    # prepare some indexes for fast access to column defs
+    table_cols_idx_by_name = {d['data']: d for d in table_cols}
+
     # override some of the automatic definitions
     table_cols_idx_by_name['id']['readOnly'] = True
     table_cols_idx_by_name['id']['renderer'] = 'detaillink_Renderer'  # special renderer to display a link to the detail page
     table_cols_idx_by_name['id']['detail_url'] = reverse('admin:backend1_handsontabledemo_change', args=['(id)'])
     table_cols_idx_by_name['rname']['readOnly'] = True
-    table_cols_ids = [n['data'] for n in table_cols]
 
     #
     # save and/or retrieve the data, applying filters and options
     #
     if request.method == 'POST':
         if request.POST.get('changes'):
-            errors = handsontable_demo_save(json.loads(request.POST['changes']),
-                                            table_cols_ids,
-                                            table_cols_idx_by_name)
+            errors = handsontable_generic_save(json.loads(request.POST['changes']), table_cols, HandsontableDemo)
             if errors:
                 return JsonResponse({'errors': errors})
         query = HandsontableDemo.objects.order_by('id')
@@ -191,87 +114,72 @@ def handsontable_demo(request):
             query = query.filter(email__icontains=search_term)
         query = query[:HANDSONTABLE_MAX_ROWS]
         table_data = []
-        for r in query:
-            rec = {k: getattr(r, k, None) for k in table_cols_ids if not k.endswith('__L')}
-            # pre-process each field choices, or foreign-keys
-            rec['test_int_choices__L'] = table_cols_idx_by_name['test_int_choices__L']['lookup_choices'].get(r.test_int_choices)
-            rec['test_int_choices_null__L'] = table_cols_idx_by_name['test_int_choices_null__L']['lookup_choices'].get(r.test_int_choices_null)
-            if r.test_foreign_key_id is not None:
-                rec['test_foreign_key__L'] = r.test_foreign_key.rname
-            if r.test_foreign_key_null_id is not None:
-                rec['test_foreign_key_null__L'] = r.test_foreign_key_null.rname
-            table_data.append(rec)
+        for rec in query:
+            # convert the orm record "rec" into the dict "row", processing foreignkey and choice fields
+            row = handsontable_process_rows(rec, table_cols, table_cols_idx_by_name)
+            table_data.append(row)
         logging.debug('handsontable... table response #recs=%s', len(table_data))
         return HttpResponse(json.dumps({'table_data': table_data}, cls=DjangoJSONEncoder), content_type='application/json')
 
     context['SPECIAL_PREFIX'] = HANDSONTABLE_FIELD_PREFIX
     context['MAX_ROWS'] = HANDSONTABLE_MAX_ROWS
-    context['link_list'] = reverse('handsontable_users')
+    context['link_list'] = reverse('spreadsheet_demo')
     context['table_columns'] = json.dumps([x for x in table_cols if x['type'] != 'hidden'])
 
-    return render_to_response("handsontable_demo.html", context)
+    return render_to_response("spreadsheet_demo.html", context)
 
-
-# Create your views here.
 
 @staff_member_required
-def handsontable_users(request):
-    """ defines/displays the User's handsontable grid, and also loads and saves the data """
-    context = RequestContext(request)
-    search_term = request.GET.get('q') or ''
-    context['search_term'] = search_term or ''
+def spreadsheet_userprofile(request):
+    """ defines/displays any model spreadsheet. Not really useful, you should always create a custom view per model """
 
     table_cols = [
-                  {"data": "id", "label": "id", "type": "text", "readOnly": True},
+                  {"data": "id", "label": "id", "type": "text", "readOnly": True,
+                        'renderer': 'detaillink_Renderer',
+                        'link_to': reverse('admin:backend1_userprofile_change', args=['(val)']),
+                   },
                   {"data": "email", "label": "email", "type": "text"},
                   {"data": "first_name", "label": "first_name", "type": "text"},
                   {"data": "last_name", "label": "last_name", "type": "text"},
-                  {"data": "last_login", "label": "last_login", "type": "datetime"},
-                  {"data": "is_active", "label": "last_login", "type": "checkbox"},
+                  {"data": "is_active", "label": "is_active", "type": "checkbox"},
+                  {"data": "is_staff", "label": "is_staff", "type": "checkbox"},
+                  {"data": "last_login", "label": "last_login", "type": "datetime", 'readOnly': True},
+                  {"data": "date_joined", "label": "date_joined", "type": "datetime", 'readOnly': True},
                   ]
-    table_cols_ids = [n['data'] for n in table_cols]
+    table_cols_idx_by_name = {d['data']: d for d in table_cols}
+
+    # save the changes, if any
     if request.method == 'POST':
-        last_error = None
         if request.POST.get('changes'):
-            changes = json.loads(request.POST['changes'])
-            change = None
-            try:
-                with transaction.atomic():
-                    for change in changes:
-                        logging.info('handsontable_users() change=%r', change)
-                        assert change.get('id'), 'a change without an ID? %r' % change
-                        # NOTE: datetime/date/time fields must be MANUALLY deserialized
-                        # NOTE: validation goes here.
-                        pk = change.pop('id')
-                        if str(pk).startswith('_Temporary_ID_'):
-                            if not change.get('email'):
-                                raise ValidationError('email is required')
-                            UserProfile.objects.create(**change)
-                        else:
-                            # validation: while updating, the values can be unset... so we have to check for SET and empty string... that's why the 'dummy' value
-                            if not change.get('email', 'dummy'):
-                                raise ValidationError('email is required')
-                            UserProfile.objects.filter(pk=pk).update(**change)
-            except Exception, e:
-                logging.error('handsontable_users() change=%r error=%r', change, e)
-                last_error = e
-        if last_error:
-            return JsonResponse({'errors': [str(last_error)]})
-        #
-        # retrieve the data, applying filters and options
-        #
-        query = UserProfile.objects.order_by('first_name', 'last_name')
-        if search_term:
-            query = query.filter(email__icontains=search_term)
-        query = query[:HANDSONTABLE_MAX_ROWS]
-        table_data = []
-        for r in query:
-            table_data.append({k: getattr(r, k) for k in table_cols_ids})
-        return JsonResponse({'table_data': table_data})
+            errors = handsontable_generic_save(json.loads(request.POST['changes']), table_cols, UserProfile)
+            if errors:
+                return JsonResponse({'errors': errors})
 
+    search_term = request.GET.get('q') or ''
+
+    query = UserProfile.objects.order_by('first_name', 'last_name')
+    if search_term:
+        query = query.filter(Q(email__icontains=search_term) | Q(first_name__icontains=search_term) | Q(last_name__icontains=search_term))
+    if request.GET.get('id__exact'):
+        query = query.filter(id=request.GET.get('id__exact'))
+    query = query[:HANDSONTABLE_MAX_ROWS]
+    table_data = []
+    for rec in query:
+        # convert the orm record "rec" into the dict "row", processing foreignkey and choice fields
+        table_data.append(handsontable_process_rows(rec, table_cols, table_cols_idx_by_name))
+    logging.debug('handsontable... table response #recs=%s', len(table_data))
+
+    # if we were just loading the data, skip the rest and return the json table data only
+    if request.method == 'POST':
+        return HttpResponse(json.dumps({'table_data': table_data}, cls=DjangoJSONEncoder), content_type='application/json')
+
+    context = RequestContext(request)
+    context['search_term'] = search_term or ''
+    context['SPECIAL_PREFIX'] = HANDSONTABLE_FIELD_PREFIX
     context['MAX_ROWS'] = HANDSONTABLE_MAX_ROWS
-    context['link_add'] = "#"
-    context['link_list'] = reverse('handsontable_users')
-    context['table_columns'] = json.dumps(table_cols)
+    context['link_list'] = reverse('spreadsheet_userprofile')
+    context['title'] = 'userprofile'
+    context['table_data'] = json.dumps(table_data, cls=DjangoJSONEncoder)
+    context['table_columns'] = json.dumps([x for x in table_cols if x['type'] != 'hidden'])
 
-    return render_to_response("handsontable_user.html", context)
+    return render_to_response("spreadsheet_userprofile.html", context)
