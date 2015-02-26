@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-echo "-----> Compressing static files"
+echo "-----> running collectstatic"
+python manage.py collectstatic
+echo "-----> running compress"
 python manage.py compress
 
 echo
