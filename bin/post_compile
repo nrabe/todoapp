@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-ls -al /apps/static
+ls -al /app/static
 
 # The post_compile hook is run by heroku-buildpack-python
 
@@ -18,4 +18,4 @@ if [ -f bin/run_compress ]; then
 fi
 
 echo "-----> Post-compile done"
-ls -al /apps/static
+ls -al /app/static
