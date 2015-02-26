@@ -2,7 +2,6 @@
 set -eo pipefail
 
 # The post_compile hook is run by heroku-buildpack-python
-
 echo "-----> I'm post-compile hook"
 
 # Work around Heroku bug whereby pylibmc isn't available during
@@ -10,7 +9,7 @@ echo "-----> I'm post-compile hook"
 export MEMCACHE_SERVERS='' MEMCACHIER_SERVERS=''
 
 echo "-----> running compress"
-python manage.py compress --noinput
+python manage.py compress
 
-echo "-----> Post-compile done"
 ls -al /app/static
+echo "-----> Post-compile done"
