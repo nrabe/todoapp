@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tablenow.settings." + os.environ.get("ENVIRONMENT", "MUST-SET-ENVIRONMENT-VARIABLE-SEE-README"))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "todoapp.settings." + os.environ.get("ENVIRONMENT", "MUST-SET-ENVIRONMENT-VARIABLE-SEE-README"))
 logging.warn("(manage.py) DJANGO_SETTINGS_MODULE=%s %r", os.environ.get("DJANGO_SETTINGS_MODULE"), sys.argv)
 
 if __name__ == "__main__":
