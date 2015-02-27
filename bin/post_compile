@@ -9,8 +9,8 @@ echo "-----> I'm post-compile hook"
 export MEMCACHE_SERVERS='' MEMCACHIER_SERVERS=''
 
 
-echo "-----> running compress"
+#echo "-----> running compress"
 #python manage.py compress
+#ls -al /app/static
 
-ls -al /app/static
 echo "-----> Post-compile done"
