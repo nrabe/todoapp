@@ -4,6 +4,7 @@ import logging
 
 from django.contrib.auth import authenticate, login, logout
 from django.conf import settings
+from django.db import connection
 
 from models import TODOList, TODOListItem, UserProfile
 from error_messages import ERRORS
@@ -16,9 +17,14 @@ def api_sys_test(request, test=''):
     """ returns a list of configuration parameters ( server version, mood types, titles, etc )."""
     response_json = {}
     if test == 'fatal_error':
-        dummy = 1 / 0  # @UnusedVariable
+        raise NameError('this_method_does_not_exist')
     elif test == 'error':
         raise ApiException(100, 'Testing error handling')
+    elif test == 'db_error':
+        # this is *EXPECTED* to fail, badly
+        cursor = connection.cursor()
+        cursor.execute("UPDATE bar SET foo = 1 WHERE baz = %s", [1])
+        cursor.execute("SELECT foo FROM bar WHERE baz = %s", [1])
     response_json['ok'] = 1
     return response_json
 
@@ -284,7 +290,7 @@ def api_profile_update(request, email=None, password=None, first_name=None, last
     if email is not None:
         curr_user.email = email
     if password is not None:
-        curr_user.password = password
+        curr_user.set_password(password)
     if first_name is not None:
         curr_user.first_name = first_name
     if last_name is not None:

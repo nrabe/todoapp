@@ -1,11 +1,27 @@
 """
-Exports the backend
+
+api.* ( see :doc:`api_general` )
+
+models.* ( see the code )
+
+constants.* ( see the code )
+
+
+utils.* several utility functions:
+
+.. automodule:: todoapp1.backend1.utils
+    :members:
+
 """
+
 import models
 import api
-from utils import dt_server_now
-import todoapp1.settings.common_constants as constants
+import utils
+import todoapp1.settings.constants as constants
 
 __all__= [
-    locals()
+    "api"
+    "constants"
+    "models"
+    "utils"
 ]

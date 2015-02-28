@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.test import Client
 from django.core.urlresolvers import reverse
 
-import todoapp1.settings.common_constants as constants
+from todoapp1.settings import constants
 from todoapp1.backend1 import api as backend
 
 

@@ -21,6 +21,8 @@ General API
 - every String parameter and response is up to 255 characters long, unless otherwise specified
 - UTF-8 as preferred request/response encoding
 
+View a sample javascript page calling the API
+.. literalinclude:: _static/api_sample.js
 
 .. automodule:: todoapp1.backend1.api
    :members:

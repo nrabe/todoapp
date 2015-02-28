@@ -21,6 +21,7 @@ DATABASES = {
     },
 }
 
+os.environ.setdefault('SENTRY_DSN', 'https://ffdc9132abe44bd9850c62f748162c77:f4b46cc652b34b8a992d7fa29ce4ba86@app.getsentry.com/38770')
 
 GRAPHENEDB_URL = "http://localhost:7474/db/data/"
 

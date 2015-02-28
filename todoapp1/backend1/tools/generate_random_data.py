@@ -11,7 +11,7 @@ django.setup()
 from django.conf import settings
 from todoapp1.backend1 import api as backend
 
-from todoapp1.settings.common_constants import TEST_USER_EMAIL_FORMAT, TEST_USER_PASSWORD
+from todoapp1.settings.constants import TEST_USER_EMAIL_FORMAT, TEST_USER_PASSWORD
 
 apicontext1 = backend.get_api_context()
 

@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Interesting project features &mdash; TodoApp 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="TodoApp 0.2 documentation" href="index.html" />
+    <link rel="prev" title="General API" href="api_general.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="index.html">
+          <span>TodoApp 0.2 documentation</span></a></h1>
+        <h2 class="heading"><span>Interesting project features</span></h2>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="api_general.html">General API</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="interesting-project-features">
+<h1>Interesting project features<a class="headerlink" href="#interesting-project-features" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li>Simple, yet powerful API patterns ( each API call can be used as a simple python function, called via json-rpc v2.0, and even as a RESTful URL defined in backend1.urls )</li>
+<li>careful and detailed API logging.</li>
+<li>request parameter validation/parsing is kept very simple (call the param_xxx() functions, and/or write custom code raising ApiExceptions )</li>
+<li>response serialization is also kept simple ( return a dict of your choice )</li>
+<li>integrated sphinx documentation, including API response samples (thanks to the tests)</li>
+<li>heroku ready</li>
+<li>monitoring and error reporting using New Relic and Sentry.</li>
+<li>multiple environments/pipelines ( development, testing, production )</li>
+<li>whitenoise static file server</li>
+<li>elegant directory/package structure, including versioning.</li>
+</ul>
+</div>
+<div class="section" id="general-design-coding-tips">
+<h1>General Design/Coding Tips<a class="headerlink" href="#general-design-coding-tips" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li>use the shortcuts page (lots of links on a system, and it&#8217; useful to have them always handy)</li>
+<li>There are several scripts in the scripts/ directory. Most of them are self-explanatory.</li>
+<li>To generate the documentation locally, run the script and reload the server.</li>
+<li>heroku/environment variables can usually be overriden locally. E.g. <cite>ENVIRONMENT=heroku_development scripts/run-locally.sh</cite> will run the local server with that settings file.</li>
+<li>if it&#8217;s  not in a test, it&#8217;s a bug, or it&#8217;ll be a bug in the future.</li>
+<li>if there was an error, write a test. It will happen again, several times.</li>
+<li>call backend functions using keyword parameters. It greatly helps future compatibility.</li>
+<li>Don&#8217;t rely on pip dependencies or 3rd party services lightly (the worst downtime of the lot is your best possible downtime, and 3rd party code is hard to understand/debug/maintain/upgrade).</li>
+<li>use a vagrant box to work. It&#8217;ll run in different computers and/or for several developers.</li>
+</ul>
+</div>
+<div class="section" id="backend-interface">
+<h1>Backend interface<a class="headerlink" href="#backend-interface" title="Permalink to this headline">¶</a></h1>
+<p>Do not import modules from the backend. Instead, put them in the backend init file. The backend exposes:</p>
+<span class="target" id="module-todoapp1.backend1"></span><p>api.* ( see <a class="reference internal" href="api_general.html"><em>General API</em></a> )</p>
+<p>models.* ( see the code )</p>
+<p>constants.* ( see the code )</p>
+<p>utils.* several utility functions:</p>
+<span class="target" id="module-todoapp1.backend1.utils"></span><dl class="function">
+<dt id="todoapp1.backend1.utils.LOG">
+<tt class="descname">LOG</tt><big>(</big><em>level='debug'</em>, <em>type='general'</em>, <em>category='debug'</em>, <em>exception=None</em>, <em>request=None</em>, <em>message=None</em>, <em>via_db=False</em>, <em>via_mail=False</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.utils.LOG" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>level</strong> &#8211; debug/info/warning/error/critical</li>
+<li><strong>type</strong> &#8211; general/api/test/process.X</li>
+<li><strong>category</strong> &#8211; success/failure/notice/none</li>
+<li><strong>exception</strong> &#8211; </li>
+<li><strong>request</strong> &#8211; request object. path/user/version and other values may be extracted. If not given, it&#8217;ll try to guess using todoapp1.middleware.get_request()</li>
+<li><strong>message</strong> &#8211; message to log. If it&#8217;s an object, a suitable representation will be generated.</li>
+<li><strong>via_db</strong> &#8211; </li>
+<li><strong>via_mail</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.utils.dt_server_now">
+<tt class="descname">dt_server_now</tt><big>(</big><big>)</big><a class="headerlink" href="#todoapp1.backend1.utils.dt_server_now" title="Permalink to this definition">¶</a></dt>
+<dd><p>UTC server and DB time</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.utils.dt_string_to_server">
+<tt class="descname">dt_string_to_server</tt><big>(</big><em>dt</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.utils.dt_string_to_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>parses/converts a date from utc to utc (datetime)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.utils.dt_local_to_server">
+<tt class="descname">dt_local_to_server</tt><big>(</big><em>dt</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.utils.dt_local_to_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>parses/converts a date from local to utc. Notice how we force the UTC timezone with .astimezone(timezone.utc)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.utils.dt_server_to_local">
+<tt class="descname">dt_server_to_local</tt><big>(</big><em>dt</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.utils.dt_server_to_local" title="Permalink to this definition">¶</a></dt>
+<dd><p>parses/converts a date from utc to local</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-todoapp1.backend1.api_utils">
+<span id="api-internal-functions"></span><h1>API INTERNAL FUNCTIONS<a class="headerlink" href="#module-todoapp1.backend1.api_utils" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="todoapp1.backend1.api_utils.param_string">
+<tt class="descname">param_string</tt><big>(</big><em>val</em>, <em>required=False</em>, <em>blank=True</em>, <em>max_size=255</em>, <em>error=(200</em>, <em>'Missing or invalid parameter: %(field_name)s')</em>, <em>field_name=None</em>, <em>after=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api_utils.param_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>parameter validator function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api_utils.param_integer">
+<tt class="descname">param_integer</tt><big>(</big><em>val</em>, <em>required=False</em>, <em>blank=True</em>, <em>error=(200</em>, <em>'Missing or invalid parameter: %(field_name)s')</em>, <em>field_name=None</em>, <em>after=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api_utils.param_integer" title="Permalink to this definition">¶</a></dt>
+<dd><p>parameter validator function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api_utils.param_email">
+<tt class="descname">param_email</tt><big>(</big><em>val</em>, <em>required=False</em>, <em>blank=True</em>, <em>error=(200</em>, <em>'Missing or invalid parameter: %(field_name)s')</em>, <em>field_name=None</em>, <em>after=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api_utils.param_email" title="Permalink to this definition">¶</a></dt>
+<dd><p>parameter validator function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api_utils.param_latlon">
+<tt class="descname">param_latlon</tt><big>(</big><em>lat</em>, <em>lon</em>, <em>required=False</em>, <em>error=(200</em>, <em>'Missing or invalid parameter: %(field_name)s')</em>, <em>field_name=None</em>, <em>after=None</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api_utils.param_latlon" title="Permalink to this definition">¶</a></dt>
+<dd><p>parameter validator function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api_utils.api_call">
+<tt class="descname">api_call</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api_utils.api_call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for each API call. It performs certain common functions, such as registering, logging, serializing, client version parsing, etc.</p>
+<p>Function names should start with api_</p>
+<p>Any exception other than ApiException() is a fatal error (either a programming error or a runtime error).</p>
+<p>Parameters: Use only keyword values function( name=XXX ), not positional values function(XXX).</p>
+<p>Parameters: unexpected parameters will throw an ApiException()</p>
+<p>Do not rely too much on the request object (session, cookies, auth, GET, POST, path, etc)... it may be a fake request object ( when called from native python )</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="todoapp1.backend1.api_utils.jsonrpc_dispatcher">
+<tt class="descname">jsonrpc_dispatcher</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#todoapp1.backend1.api_utils.jsonrpc_dispatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>JSONRPC dispatcher view. All API calls via JSONRPC go through this method</p>
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="api_general.html">General API</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2014, Nahuel, Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -64,7 +64,6 @@ SITE_ID = 1
 INSTALLED_APPS = (
     'todoapp1.web1',
     'todoapp1.backend1',
-    'todoapp1.backend_res1',
     'todoapp1.mobile1',
     'todoapp1.admin1',
     'pq',  # simple task queue ( django-pq )
@@ -82,6 +81,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'raven.contrib.django.raven_compat',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -248,4 +248,4 @@ LOGGING = {
     }
 }
 
-from common_constants import *  # @UnusedWildImport ... important for other parts of the system.
+from constants import *  # @UnusedWildImport ... important for other parts of the system.

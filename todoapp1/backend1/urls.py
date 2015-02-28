@@ -7,7 +7,7 @@ def url_v1(u, funcName):
 
 
 urlpatterns = patterns('',
-    url(r'^0.1/jsonrpc/(?P<x_client_version>[a-zA-Z0-9\.]+)/$', 'todoapp1.backend1.api.jsonrpc_dispatcher', name='jsonrpc'),
+    url(r'^0.1/jsonrpc/v1/(?P<x_client_version>[a-zA-Z0-9\.]+)/$', 'todoapp1.backend1.api.jsonrpc_dispatcher', name='jsonrpc'),
 
     url_v1(r'sys/test', 'api_sys_test'),
     url_v1(r'sys/remove_test_data', 'api_sys_remove_test_data'),

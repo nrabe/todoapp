@@ -1,0 +1,67 @@
+.. tablenow documentation master file, created by
+   sphinx-quickstart on Tue Oct  7 22:49:52 2014.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+.. role:: json(code)
+   :language: json
+   :class: highlight
+
+.. role:: python(code)
+   :language: python
+   :class: highlight
+
+
+Interesting project features
+======================================
+
+- Simple, yet powerful API patterns ( each API call can be used as a simple python function, called via json-rpc v2.0, and even as a RESTful URL defined in backend1.urls )
+- careful and detailed API logging.
+- request parameter validation/parsing is kept very simple (call the param_xxx() functions, and/or write custom code raising ApiExceptions )
+- response serialization is also kept simple ( return a dict of your choice )
+- integrated sphinx documentation, including API response samples (thanks to the tests)
+- heroku ready
+- monitoring and error reporting using New Relic and Sentry.
+- multiple environments/pipelines ( development, testing, production )
+- whitenoise static file server
+- elegant directory/package structure, including versioning.
+
+
+General Design/Coding Tips
+======================================
+
+- use the shortcuts page (lots of links on a system, and it' useful to have them always handy)
+
+- There are several scripts in the scripts/ directory. Most of them are self-explanatory.
+
+- To generate the documentation locally, run the script and reload the server.
+
+- heroku/environment variables can usually be overriden locally. E.g. `ENVIRONMENT=heroku_development scripts/run-locally.sh` will run the local server with that settings file.
+
+
+- if it's  not in a test, it's a bug, or it'll be a bug in the future.
+
+- if there was an error, write a test. It will happen again, several times.
+
+- call backend functions using keyword parameters. It greatly helps future compatibility.
+
+- Don't rely on pip dependencies or 3rd party services lightly (the worst downtime of the lot is your best possible downtime, and 3rd party code is hard to understand/debug/maintain/upgrade).
+
+- use a vagrant box to work. It'll run in different computers and/or for several developers.
+
+
+Backend interface
+======================================
+
+Do not import modules from the backend. Instead, put them in the backend init file. The backend exposes:
+
+.. automodule:: todoapp1.backend1
+
+
+
+API INTERNAL FUNCTIONS
+======================================
+
+.. automodule:: todoapp1.backend1.api_utils
+    :members:
+

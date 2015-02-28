@@ -10,6 +10,6 @@ rm -fr docs/docs/ docs/build/
 IS_SPHINX_BUILD=1 sphinx-build -a -d docs/build/doctrees  -b html  docs/source docs/docs/
 RV=$?; if [ $RV -ne 0 ]; then exit $RV; fi
 
-python -W ignore::DeprecationWarning -u manage.py collectstatic -v0 -c --noinput
+python -W ignore::DeprecationWarning -u manage.py collectstatic -v0 --noinput
 
 exit $RV

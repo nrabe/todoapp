@@ -20,6 +20,7 @@ from django.views.decorators.cache import cache_control
 from django.core.validators import validate_email
 from django.core.management import call_command
 from error_messages import ERRORS
+from raven.contrib.django.models import client as raven_client
 
 from utils import LOG
 
@@ -61,6 +62,7 @@ def set_cookie(response, key, value, days_expire=7):
 
 
 def param_string(val, required=False, blank=True, max_size=255, error=ERRORS.invalid_parameter, field_name=None, after=None):
+    """ parameter validator function """
     error = ApiException(error[0], error[1] % {'field_name': field_name, 'val': val})
     if val is None:
         if required:
@@ -77,6 +79,7 @@ def param_string(val, required=False, blank=True, max_size=255, error=ERRORS.inv
 
 
 def param_integer(val, required=False, blank=True, error=ERRORS.invalid_parameter, field_name=None, after=None):
+    """ parameter validator function """
     error = ApiException(error[0], error[1] % {'field_name': field_name, 'val': val})
     if val is None:
         if required:
@@ -94,6 +97,7 @@ def param_integer(val, required=False, blank=True, error=ERRORS.invalid_paramete
 
 
 def param_email(val, required=False, blank=True, error=ERRORS.invalid_parameter, field_name=None, after=None):
+    """ parameter validator function """
     error = ApiException(error[0], error[1] % {'field_name': field_name, 'val': val})
     if val is None:
         if required:
@@ -111,6 +115,7 @@ def param_email(val, required=False, blank=True, error=ERRORS.invalid_parameter,
 
 
 def param_latlon(lat, lon, required=False, error=ERRORS.invalid_parameter, field_name=None, after=None):
+    """ parameter validator function """
     error = ApiException(error[0], error[1] % {'field_name': field_name, 'val': (lat, lon)})
     if (lat is None) or (lon is None):
         if required:
@@ -124,9 +129,14 @@ def param_latlon(lat, lon, required=False, error=ERRORS.invalid_parameter, field
 
 
 def get_curr_user(request, required=False):
-    """ this function has two "special" features it'd be best to avoid (but could not find a nicer way)
-        1) the local import part, and
-        2) the transformation form django.auth.User to models.UserProfile
+    """
+    this function has two "special" features it'd be best to avoid (but could not find a nicer way)
+    1) the local import part, and
+    2) the transformation form django.auth.User to models.UserProfile
+
+    :param request:
+    :param required:
+    :return:
     """
     from models import UserProfile
     if not request.user.is_authenticated():
@@ -158,14 +168,15 @@ registered_api_calls = {}
 
 def api_call(func):
     """
-    Decorator to log each API call, to perform certain common functions, such as logging, serializing, client version parsing, etc.
+    Decorator for each API call. It performs certain common functions, such as registering, logging, serializing, client version parsing, etc.
 
-    Function names should start with "api_"
+    Function names should start with api\_
+
     Any exception other than ApiException() is a fatal error (either a programming error or a runtime error).
+
     Parameters: Use only keyword values function( name=XXX ), not positional values function(XXX).
+
     Parameters: unexpected parameters will throw an ApiException()
-    Parameters: validation and value parsing are manual, not automatic ( use the param_* functions )
-    Parameters: the priority order is python native, HTTP POST and HTTP GET
 
     Do not rely too much on the request object (session, cookies, auth, GET, POST, path, etc)... it may be a fake request object ( when called from native python )
     """
@@ -212,7 +223,10 @@ def api_call(func):
                               sys._getframe().f_back.f_code.co_name,
                               response or last_exception)
             if last_exception:
-                LOG(level='warn', type='API', category='ERROR', message='[% 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() exception=%.1024r'%logging_params, exception=last_exception)
+                level = 'critical'
+                if isinstance(last_exception, ApiException):
+                    level = 'error'
+                LOG(level=level, type='API', category='ERROR', message='[% 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() exception=%.1024r'%logging_params, exception=last_exception)
             elif settings.USE_API_LOGGING:
                 LOG(level='info', type='API', category='OK', message='[% 4dms] backend.%s(apicontext, %s) # ver=%s user=%s caller=%s() response=%.1024r'%logging_params)
 
@@ -222,7 +236,7 @@ def api_call(func):
 @csrf_exempt
 @cache_control(max_age=0, no_cache=True, no_store=True)
 def jsonrpc_dispatcher(request, x_client_version=None):
-    """ This is the JSONRPC dispatcher. All API calls via JSONRPC go through this method """
+    """ JSONRPC dispatcher view. All API calls via JSONRPC go through this method """
     _start_time = time.time()
     flag_single_call = False
     json_responses = []
@@ -250,6 +264,8 @@ def jsonrpc_dispatcher(request, x_client_version=None):
                 except ApiException, e:
                     resp['error'] = {'code': e.code or 100, 'message': e.message}
                 except Exception, e:
+                    if not 'this_method_does_not_exist' in repr(e):
+                        raven_client.captureException()
                     resp['error'] = {'code': (-32000), 'message': 'Server error %s' % e}
             json_responses.append(resp)
     if flag_single_call:

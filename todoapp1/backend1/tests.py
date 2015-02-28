@@ -25,9 +25,10 @@ class SimpleTestCase(TestCase):
         self.assertEqual(response['Content-Type'], 'application/json')
 
         try:
-            response = c.get(reverse('api:api_sys_test', kwargs={'x_client_version': 'UNITTEST.0.0.1'}) + '?test=fatal_error')
+            response = c.get(
+                reverse('api:api_sys_test', kwargs={'x_client_version': 'UNITTEST.0.0.1'}) + '?test=fatal_error')
             assert False, 'Expecting an error'
-        except ZeroDivisionError:
+        except NameError:
             pass
 
         # test single jsonrpc call
@@ -46,7 +47,8 @@ class SimpleTestCase(TestCase):
             {"jsonrpc": "2.0", "method": "api_sys_test", "params": {"test": "error"}, "id": 2},
             {"jsonrpc": "2.0", "method": "api_config", "id": 3},
         ]
-        responses = c.post(JSONRPC_ENDPOINT, content_type='application/json', data=json.dumps(requests), headers={'X-CLIENT-VERSION': 'unittest.0.0.0'})
+        responses = c.post(JSONRPC_ENDPOINT, content_type='application/json', data=json.dumps(requests),
+                           headers={'X-CLIENT-VERSION': 'unittest.0.0.0'})
         self.assertEqual(responses.status_code, 200)
         self.assertEqual(responses['Content-Type'], 'application/json')
         responses = json.loads(responses.content)
@@ -65,13 +67,14 @@ class SimpleTestCase(TestCase):
         try:
             response = backend.api_sys_test(apicontext, test='fatal_error')
             assert False, 'Expecting an error'
-        except ZeroDivisionError:
+        except NameError:
             pass
 
     def test_todo_ops(self):
 
         apicontext1 = backend.get_api_context()
-        backend.api_signup(apicontext1, email=settings.TEST_USER_1, password='test', first_name='test1', last_name='test1')
+        backend.api_signup(apicontext1, email=settings.TEST_USER_1, password='test', first_name='test1',
+                           last_name='test1')
 
         response = backend.api_todolist_set(apicontext1, title="test1")
         todolist1 = response['todolist']
@@ -90,7 +93,8 @@ class SimpleTestCase(TestCase):
         # now another user tries to access it, change it or share it and fails
         #
         apicontext2 = backend.get_api_context()
-        backend.api_signup(apicontext2, email=settings.TEST_USER_2, password='test', first_name='test1', last_name='test1')
+        backend.api_signup(apicontext2, email=settings.TEST_USER_2, password='test', first_name='test1',
+                           last_name='test1')
 
         try:
             response = backend.api_todolist(apicontext2, todolist_id=todolist1.id)
@@ -103,14 +107,16 @@ class SimpleTestCase(TestCase):
             assert e.code == 500, e
 
         try:
-            response = backend.api_todolist_share(apicontext2, todolist_id=todolist1.id, share_with_email=settings.TEST_USER_2)
+            response = backend.api_todolist_share(apicontext2, todolist_id=todolist1.id,
+                                                  share_with_email=settings.TEST_USER_2)
         except backend.ApiException, e:
             assert e.code == 500, e
 
         #
         # now user1 shares the list with user2
         #
-        response = backend.api_todolist_share(apicontext1, todolist_id=todolist1.id, share_with_email=settings.TEST_USER_2)
+        response = backend.api_todolist_share(apicontext1, todolist_id=todolist1.id,
+                                              share_with_email=settings.TEST_USER_2)
 
         # even after sharing it, the to-do cannot be changed
         try:
@@ -134,17 +140,28 @@ class SimpleTestCase(TestCase):
 
         apicontext = backend.get_api_context()
 
-        response = backend.api_signup(apicontext, email=settings.TEST_USER_1, password='test', first_name='testuser1', last_name='testuser1')
+        response = backend.api_signup(apicontext, email=settings.TEST_USER_1, password='test', first_name='testuser1',
+                                      last_name='testuser1')
         assert response.get('profile'), response
         response = backend.api_signin(apicontext, email=settings.TEST_USER_1, password='test')
         assert response.get('profile'), response
 
         backend.api_profile(apicontext)
         assert response.get('profile') and response['profile']['first_name'] == 'testuser1' and \
-            response['profile']['last_name'] == 'testuser1', response
+               response['profile']['last_name'] == 'testuser1', response
 
         response = backend.api_profile_update(apicontext, first_name='testuser1+1', last_name='testuser1+1')
         assert response.get('profile') and response['profile']['first_name'] == 'testuser1+1' and \
-            response['profile']['last_name'] == 'testuser1+1', response
+               response['profile']['last_name'] == 'testuser1+1', response
+
+        backend.api_profile_update(apicontext, password='1')
+        response = backend.api_signin(apicontext, email=settings.TEST_USER_1, password='1')
 
         backend.api_signout(apicontext)
+
+        try:
+            response = backend.api_profile(apicontext)
+            assert False, 'Expecting an error'
+        except backend.ApiException, e:
+            assert e.code == 401, e
+

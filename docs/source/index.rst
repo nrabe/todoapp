@@ -12,6 +12,18 @@ Contents:
     :maxdepth: 1
 
     api_general
+    code
+
+
+Useful links
+==================
+
+/admin/
+/signin/
+https://github.com/nrabe/todoapp
+https://dashboard.heroku.com/apps/dev-todoapp1/resources
+https://addons-sso.heroku.com/apps/dev-todoapp1/addons/sentry
+https://addons-sso.heroku.com/apps/dev-todoapp1/addons/newrelic
 
 
 Indices and tables
